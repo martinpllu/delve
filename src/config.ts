@@ -23,19 +23,19 @@ export function buildPrompt(
     ? `\nUser instruction: ${userMessage}`
     : '';
 
-  return `You are a wiki page generator. Output ONLY the markdown content for the wiki page - no explanations, no code block wrappers, just the raw markdown that will be saved directly to a .md file.
+  return `You are a wiki page generator. Output ONLY the markdown content - no explanations, no code block wrappers, just raw markdown.
 
 Topic: ${topic}
 
 ${contentSection}
-
-Detail level: ${config.detailLevel}${instructionSection}
+${instructionSection}
 
 Guidelines:
-- Write comprehensive, well-structured markdown
+- Keep it SHORT: about 200-300 words maximum (roughly one page)
 - Start with a level-1 heading (# Topic Name)
-- Include [[WikiLinks]] to related subtopics that deserve their own pages
-- Use headers, lists, and code blocks appropriately
-- Be informative but concise
+- Brief intro paragraph (2-3 sentences)
+- 2-3 key sections with bullet points
+- Use [[WikiLinks]] liberally for any notable entity: people, books, places, concepts, historical events, or anything wiki-page-worthy
+- Example: "[[To Kill a Mockingbird]] by [[Harper Lee]]" not plain text
 - Output ONLY the markdown content, nothing else`;
 }

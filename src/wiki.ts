@@ -2,7 +2,7 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import { marked } from 'marked';
 import { config, buildPrompt } from './config.js';
-import { invokeClaude } from './claude.js';
+import { invokeClaude, invokeClaudeStreaming } from './claude.js';
 
 export function slugify(text: string): string {
   return text
@@ -61,10 +61,13 @@ export async function listPages(): Promise<Array<{ slug: string; title: string }
 }
 
 // Convert [[WikiLinks]] to HTML links
+// Supports [[Topic]] and [[Topic|Display Text]] syntax
 function processWikiLinks(html: string): string {
-  return html.replace(/\[\[([^\]]+)\]\]/g, (_, linkText: string) => {
-    const slug = slugify(linkText);
-    return `<a href="/wiki/${slug}" class="wiki-link">${linkText}</a>`;
+  return html.replace(/\[\[([^\]]+)\]\]/g, (_, linkContent: string) => {
+    const [target, displayText] = linkContent.split('|');
+    const slug = slugify(target);
+    const text = displayText ?? target;
+    return `<a href="/wiki/${slug}" class="wiki-link">${text}</a>`;
   });
 }
 
@@ -86,4 +89,27 @@ export async function generatePage(
   await writePage(slug, markdownContent);
 
   return { slug, content: markdownContent };
+}
+
+/**
+ * Streaming version - yields chunks and saves when complete
+ */
+export async function* generatePageStreaming(
+  topic: string,
+  userMessage?: string
+): AsyncGenerator<string, { slug: string; content: string }> {
+  const slug = slugify(topic);
+  const existingContent = await readPage(slug);
+
+  const prompt = buildPrompt(topic, existingContent ?? undefined, userMessage);
+
+  let fullContent = '';
+  for await (const chunk of invokeClaudeStreaming(prompt)) {
+    fullContent += chunk;
+    yield chunk;
+  }
+
+  await writePage(slug, fullContent);
+
+  return { slug, content: fullContent };
 }
