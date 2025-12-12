@@ -2,7 +2,7 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import { marked } from 'marked';
 import { config, buildPrompt } from './config.js';
-import { invokeClaude, invokeClaudeStreaming } from './claude.js';
+import { invokeClaude, invokeClaudeStreaming } from './openrouter.js';
 
 export function slugify(text: string): string {
   return text
