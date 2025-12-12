@@ -40,13 +40,23 @@ Guidelines:
 - Output ONLY the markdown content, nothing else`;
 }
 
+export interface ConversationMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
 export function buildCommentPrompt(
   pageContent: string,
   selectedText: string | null,
-  question: string
+  question: string,
+  conversationHistory: ConversationMessage[] = []
 ): string {
   const selectionContext = selectedText
     ? `The user highlighted this text: "${selectedText}"`
+    : '';
+
+  const historySection = conversationHistory.length > 0
+    ? `Previous conversation:\n${conversationHistory.map(msg => `${msg.role === 'user' ? 'User' : 'AI'}: ${msg.content}`).join('\n')}\n\n`
     : '';
 
   return `You are answering a question about a wiki page. Be concise and helpful.
@@ -56,9 +66,9 @@ ${pageContent}
 
 ${selectionContext}
 
-User's question: ${question}
+${historySection}User's question: ${question}
 
-Provide a helpful, concise answer (2-4 sentences). If the question is about clarifying something in the text, explain it clearly. If it's asking for sources or verification, be honest about what you know.`;
+Provide a helpful, concise answer (2-4 sentences). If the question is about clarifying something in the text, explain it clearly. If it's asking for sources or verification, be honest about what you know. If this is a follow-up question, make sure to consider the previous conversation context.`;
 }
 
 export function buildInlineEditPrompt(

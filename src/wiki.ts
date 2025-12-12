@@ -490,6 +490,86 @@ export function findAnchorPosition(content: string, anchor: TextAnchor): AnchorM
 }
 
 /**
+ * Find anchor position only within text content (not inside HTML tags)
+ */
+function findAnchorInTextContent(
+  html: string,
+  anchor: TextAnchor
+): AnchorMatch | null {
+  // Build a map of "safe" positions (positions that are in text content, not inside tags)
+  // We'll search for the anchor only in these safe regions
+
+  const textRegions: { start: number; end: number; text: string }[] = [];
+  let inTag = false;
+  let regionStart = 0;
+
+  for (let i = 0; i < html.length; i++) {
+    if (html[i] === '<') {
+      if (!inTag && i > regionStart) {
+        textRegions.push({
+          start: regionStart,
+          end: i,
+          text: html.slice(regionStart, i)
+        });
+      }
+      inTag = true;
+    } else if (html[i] === '>') {
+      inTag = false;
+      regionStart = i + 1;
+    }
+  }
+
+  // Don't forget the last region after the final tag
+  if (!inTag && regionStart < html.length) {
+    textRegions.push({
+      start: regionStart,
+      end: html.length,
+      text: html.slice(regionStart)
+    });
+  }
+
+  // Now search for the anchor text only within text regions
+  // First try exact match
+  for (const region of textRegions) {
+    const idx = region.text.indexOf(anchor.text);
+    if (idx !== -1) {
+      return {
+        start: region.start + idx,
+        end: region.start + idx + anchor.text.length
+      };
+    }
+  }
+
+  // Try with prefix context
+  if (anchor.prefix) {
+    for (const region of textRegions) {
+      const pattern = anchor.prefix + anchor.text;
+      const idx = region.text.indexOf(pattern);
+      if (idx !== -1) {
+        const start = region.start + idx + anchor.prefix.length;
+        return { start, end: start + anchor.text.length };
+      }
+    }
+  }
+
+  // Try with suffix context
+  if (anchor.suffix) {
+    for (const region of textRegions) {
+      const pattern = anchor.text + anchor.suffix;
+      const idx = region.text.indexOf(pattern);
+      if (idx !== -1) {
+        return {
+          start: region.start + idx,
+          end: region.start + idx + anchor.text.length
+        };
+      }
+    }
+  }
+
+  return null;
+}
+
+/**
  * Inject highlight markers into HTML for inline comments
  * Returns the HTML with <mark> elements and a list of orphaned comment IDs
  */
@@ -503,7 +583,8 @@ export function injectInlineHighlights(
   const matchedComments: { comment: InlineComment; match: AnchorMatch }[] = [];
 
   for (const comment of inlineComments) {
-    const match = findAnchorPosition(html, comment.anchor);
+    // Use the safe text-content-only search
+    const match = findAnchorInTextContent(html, comment.anchor);
     if (match) {
       matchedComments.push({ comment, match });
     } else {

@@ -209,7 +209,12 @@ app.post('/wiki/:slug/comment/:id/reply', async (c) => {
     // Generate AI response for follow-up
     const pageContent = await readPage(slug);
     if (pageContent) {
-      const prompt = buildCommentPrompt(pageContent, null, message.trim());
+      // Pass conversation history (excluding the message we just added, which is the current question)
+      const conversationHistory = thread.messages.slice(0, -1).map(msg => ({
+        role: msg.role,
+        content: msg.content,
+      }));
+      const prompt = buildCommentPrompt(pageContent, null, message.trim(), conversationHistory);
       const aiResponse = await invokeClaude(prompt);
       thread = await addReplyToPageComment(slug, threadId, aiResponse, 'assistant');
     }
@@ -316,7 +321,12 @@ app.post('/wiki/:slug/inline/:id/reply', async (c) => {
     const pageContent = await readPage(slug);
     if (pageContent) {
       const selectedText = thread.anchor.text;
-      const prompt = buildCommentPrompt(pageContent, selectedText, message.trim());
+      // Pass conversation history (excluding the message we just added, which is the current question)
+      const conversationHistory = thread.messages.slice(0, -1).map(msg => ({
+        role: msg.role,
+        content: msg.content,
+      }));
+      const prompt = buildCommentPrompt(pageContent, selectedText, message.trim(), conversationHistory);
       const aiResponse = await invokeClaude(prompt);
       thread = await addReplyToInlineComment(slug, threadId, aiResponse, 'assistant');
     }
