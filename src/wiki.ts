@@ -360,8 +360,8 @@ export async function addVersion(
 }
 
 /**
- * Reverts to a previous version by moving the pointer.
- * Versions beyond the pointer remain on disk but are hidden from UI.
+ * Reverts/restores to any version (including superseded ones).
+ * Updates the pointer and clears supersededAt if restoring a superseded version.
  */
 export async function revertToVersion(
   slug: string,
@@ -371,11 +371,16 @@ export async function revertToVersion(
   await ensureVersionsInitialized(pageData, slug);
 
   const targetVersionData = pageData.versions!.find(v => v.version === targetVersion);
-  if (!targetVersionData || targetVersion > pageData.currentVersion!) {
+  if (!targetVersionData) {
     return null;
   }
 
-  // Update pointer - versions beyond are now "hidden"
+  // If restoring a superseded version, clear its supersededAt flag
+  if (targetVersionData.supersededAt) {
+    delete targetVersionData.supersededAt;
+  }
+
+  // Update pointer
   pageData.currentVersion = targetVersion;
 
   // Write the reverted content to .md file
@@ -404,7 +409,20 @@ export async function getVersionHistory(slug: string): Promise<PageVersion[]> {
 }
 
 /**
- * Gets a specific version for preview.
+ * Returns ALL versions including superseded ones for "show all" UI.
+ * Most recent first.
+ */
+export async function getAllVersionHistory(slug: string): Promise<PageVersion[]> {
+  const pageData = await readPageData(slug);
+  await ensureVersionsInitialized(pageData, slug);
+  await writePageData(slug, pageData); // Persist migration if it happened
+
+  // Return all versions, most recent first
+  return pageData.versions!.slice().reverse();
+}
+
+/**
+ * Gets a specific version for preview (including superseded versions).
  */
 export async function getVersion(
   slug: string,
@@ -413,8 +431,7 @@ export async function getVersion(
   const pageData = await readPageData(slug);
   await ensureVersionsInitialized(pageData, slug);
 
-  // Only allow access to versions up to current pointer
-  if (version < 1 || version > pageData.currentVersion!) {
+  if (version < 1) {
     return null;
   }
 

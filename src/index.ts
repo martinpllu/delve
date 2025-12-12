@@ -25,6 +25,7 @@ import {
   addVersion,
   revertToVersion,
   getVersionHistory,
+  getAllVersionHistory,
   getVersion,
   getCurrentVersion,
   PageVersion,
@@ -432,15 +433,19 @@ app.post('/wiki/:slug/inline-edit', async (c) => {
 // ============================================
 
 // Get version history for a page
+// ?all=true returns all versions including superseded ones
 app.get('/wiki/:slug/history', async (c) => {
   const slug = c.req.param('slug');
+  const showAll = c.req.query('all') === 'true';
   const exists = await pageExists(slug);
 
   if (!exists) {
     return c.json({ error: 'Page not found' }, 404);
   }
 
-  const versions = await getVersionHistory(slug);
+  const versions = showAll
+    ? await getAllVersionHistory(slug)
+    : await getVersionHistory(slug);
   const currentVersion = await getCurrentVersion(slug);
   return c.json({ versions, currentVersion });
 });

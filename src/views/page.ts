@@ -184,7 +184,13 @@ export function wikiPage(
 
         <!-- Version History -->
         <div class="version-history" id="version-history">
-          <h4>Version History</h4>
+          <div class="version-history-header">
+            <h4>Version History</h4>
+            <label class="show-all-toggle">
+              <input type="checkbox" id="show-all-versions" />
+              <span>Show reverted</span>
+            </label>
+          </div>
           <div class="version-list" id="version-list">
             <p class="loading-versions"><span class="spinner"></span> Loading versions...</p>
           </div>
@@ -860,8 +866,10 @@ export function wikiPage(
         const previewContent = document.getElementById('preview-content');
         const previewVersionNum = document.getElementById('preview-version-num');
         const previewRevertBtn = document.getElementById('preview-revert');
+        const showAllCheckbox = document.getElementById('show-all-versions');
 
         let currentVersionNum = 1;
+        let showAllVersions = false;
 
         function formatVersionTimestamp(isoString) {
           const date = new Date(isoString);
@@ -875,7 +883,10 @@ export function wikiPage(
 
         async function loadVersionHistory() {
           try {
-            const response = await fetch('/wiki/' + slug + '/history');
+            const url = showAllVersions
+              ? '/wiki/' + slug + '/history?all=true'
+              : '/wiki/' + slug + '/history';
+            const response = await fetch(url);
             const data = await response.json();
 
             if (!data.versions || data.versions.length === 0) {
@@ -887,21 +898,27 @@ export function wikiPage(
 
             const versionsHtml = data.versions.map(v => {
               const isCurrent = v.version === currentVersionNum;
+              const isSuperseded = !!v.supersededAt;
               const promptPreview = v.editPrompt
                 ? escapeHtml(v.editPrompt.slice(0, 60)) + (v.editPrompt.length > 60 ? '...' : '')
                 : '(Initial generation)';
 
+              const classes = ['version-item'];
+              if (isCurrent) classes.push('version-current');
+              if (isSuperseded) classes.push('version-superseded');
+
               return \`
-                <div class="version-item \${isCurrent ? 'version-current' : ''}" data-version="\${v.version}">
+                <div class="\${classes.join(' ')}" data-version="\${v.version}">
                   <div class="version-header">
                     <span class="version-number">v\${v.version}</span>
                     <span class="version-timestamp">\${formatVersionTimestamp(v.timestamp)}</span>
                     \${isCurrent ? '<span class="version-badge">Current</span>' : ''}
+                    \${isSuperseded ? '<span class="version-badge version-badge-superseded">Reverted</span>' : ''}
                   </div>
                   <div class="version-prompt">\${promptPreview}</div>
                   <div class="version-actions">
                     <button class="btn-preview-version" data-version="\${v.version}">Preview</button>
-                    \${!isCurrent ? \`<button class="btn-revert-version" data-version="\${v.version}">Revert</button>\` : ''}
+                    \${!isCurrent ? \`<button class="btn-revert-version" data-version="\${v.version}">\${isSuperseded ? 'Restore' : 'Revert'}</button>\` : ''}
                   </div>
                 </div>
               \`;
@@ -913,6 +930,11 @@ export function wikiPage(
             console.error('Failed to load version history:', error);
           }
         }
+
+        showAllCheckbox.addEventListener('change', (e) => {
+          showAllVersions = e.target.checked;
+          loadVersionHistory();
+        });
 
         async function previewVersion(versionNum) {
           try {
