@@ -20,8 +20,12 @@ export function homePage(pages: PageInfo[]): string {
           placeholder="e.g., PostgreSQL, How does DNS work?, Machine Learning basics..."
           rows="3"
           required
+          autofocus
         ></textarea>
-        <button type="submit" id="generate-btn">Generate Page</button>
+        <div class="form-footer">
+          <button type="submit" id="generate-btn">Generate Page</button>
+          <span class="submit-hint">⌘↵ to submit</span>
+        </div>
       </form>
     </section>
 
@@ -39,6 +43,17 @@ export function homePage(pages: PageInfo[]): string {
       const generateSection = document.getElementById('generate-section');
       const streamingSection = document.getElementById('streaming-section');
       const streamingContent = document.getElementById('streaming-content');
+      const topicInput = document.getElementById('topic');
+
+      // Cmd/Ctrl + Enter to submit
+      topicInput.addEventListener('keydown', (e) => {
+        const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+        const modKey = isMac ? e.metaKey : e.ctrlKey;
+        if (modKey && e.key === 'Enter') {
+          e.preventDefault();
+          form.requestSubmit();
+        }
+      });
 
       form.addEventListener('submit', async (e) => {
         e.preventDefault();

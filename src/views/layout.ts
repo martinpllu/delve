@@ -67,7 +67,11 @@ export function layout(
     </nav>
 
     <div class="sidebar-footer">
-      <a href="/" class="new-page-btn">+ New Page</a>
+      <a href="/" class="new-page-btn" id="new-page-btn">
+        <span class="new-page-icon">+</span>
+        <span>New Page</span>
+        <kbd class="shortcut-hint">⌘N</kbd>
+      </a>
     </div>
   </aside>
 
@@ -321,6 +325,12 @@ export function layout(
       if (modKey && e.key === '\\\\') {
         e.preventDefault();
         toggleSidebar();
+      }
+
+      // Cmd/Ctrl + N - New page
+      if (modKey && e.key === 'n') {
+        e.preventDefault();
+        window.location.href = '/';
       }
 
       // Escape - Clear search or close sidebar

@@ -285,23 +285,48 @@ body {
 
 /* Sidebar Footer */
 .sidebar-footer {
-  padding: 8px 14px;
+  padding: 12px 14px;
   border-top: 1px solid var(--border-light);
 }
 
 .new-page-btn {
-  display: block;
-  padding: 6px 10px;
-  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--text-link);
+  color: #fff;
   text-decoration: none;
   font-size: 0.875rem;
-  border-radius: 4px;
-  transition: background 0.1s ease;
+  font-weight: 500;
+  border-radius: 6px;
+  transition: background 0.15s ease, transform 0.1s ease;
 }
 
 .new-page-btn:hover {
-  background: var(--bg-hover);
-  color: var(--text-primary);
+  background: #1a73c7;
+  color: #fff;
+}
+
+.new-page-btn:active {
+  transform: scale(0.98);
+}
+
+.new-page-icon {
+  font-size: 1.1rem;
+  font-weight: 400;
+  line-height: 1;
+}
+
+.new-page-btn .shortcut-hint {
+  position: static;
+  transform: none;
+  margin-left: auto;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.65rem;
+  padding: 2px 5px;
 }
 
 /* Empty State */
@@ -446,6 +471,23 @@ body[data-sidebar-open="false"] main {
 .chat-form button:hover,
 .btn:hover {
   background: #1a73c7;
+}
+
+/* Form Footer */
+.form-footer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 0.75rem;
+}
+
+.form-footer button {
+  margin-top: 0;
+}
+
+.submit-hint {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
 }
 
 /* ===== WIKI PAGE ===== */
