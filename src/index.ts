@@ -99,10 +99,13 @@ app.get('/wiki/:slug', async (c) => {
     return c.html(errorPage('Page not found'), 404);
   }
 
-  const htmlContent = await renderMarkdown(content);
+  const [htmlContent, pages, chatHistory] = await Promise.all([
+    renderMarkdown(content),
+    listPages(),
+    readChatHistory(slug),
+  ]);
   const title = unslugify(slug);
-  const chatHistory = await readChatHistory(slug);
-  return c.html(wikiPage(slug, title, htmlContent, chatHistory));
+  return c.html(wikiPage(slug, title, htmlContent, chatHistory, pages));
 });
 
 // Chat/edit page

@@ -91,15 +91,32 @@ export async function writePage(slug: string, content: string): Promise<void> {
   await fs.writeFile(getPagePath(slug), content, 'utf-8');
 }
 
-export async function listPages(): Promise<Array<{ slug: string; title: string }>> {
+export interface PageInfo {
+  slug: string;
+  title: string;
+  modifiedAt: number;
+}
+
+export async function listPages(): Promise<PageInfo[]> {
   try {
     const files = await fs.readdir(config.dataDir);
-    return files
-      .filter(f => f.endsWith('.md'))
-      .map(f => {
+    const mdFiles = files.filter(f => f.endsWith('.md'));
+
+    const pages = await Promise.all(
+      mdFiles.map(async (f) => {
         const slug = f.replace('.md', '');
-        return { slug, title: unslugify(slug) };
-      });
+        const filePath = path.join(config.dataDir, f);
+        const stats = await fs.stat(filePath);
+        return {
+          slug,
+          title: unslugify(slug),
+          modifiedAt: stats.mtimeMs,
+        };
+      })
+    );
+
+    // Sort by most recent first
+    return pages.sort((a, b) => b.modifiedAt - a.modifiedAt);
   } catch {
     return [];
   }

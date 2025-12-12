@@ -1,5 +1,5 @@
 import { layout } from './layout.js';
-import type { ChatMessage } from '../wiki.js';
+import type { ChatMessage, PageInfo } from '../wiki.js';
 
 function formatTimestamp(isoString: string): string {
   const date = new Date(isoString);
@@ -29,8 +29,18 @@ function renderChatHistory(history: ChatMessage[]): string {
   `;
 }
 
-export function wikiPage(slug: string, title: string, htmlContent: string, chatHistory: ChatMessage[] = []): string {
-  return layout(title, `
+export function wikiPage(
+  slug: string,
+  title: string,
+  htmlContent: string,
+  chatHistory: ChatMessage[] = [],
+  pages: PageInfo[] = []
+): string {
+  return layout({
+    title,
+    pages,
+    currentSlug: slug,
+    content: `
     <article class="wiki-page">
       <div class="wiki-content">
         ${htmlContent}
@@ -63,7 +73,8 @@ export function wikiPage(slug: string, title: string, htmlContent: string, chatH
         button.innerHTML = '<span class="spinner"></span> Updating...';
       });
     </script>
-  `);
+  `,
+  });
 }
 
 export function generatingPage(topic: string): string {
