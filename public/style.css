@@ -1753,6 +1753,35 @@ body[data-sidebar-open="false"] main {
   background: #1a73c7;
 }
 
+/* ===== DANGER ZONE ===== */
+.danger-zone {
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border-light);
+}
+
+.btn-delete-page {
+  padding: 0.5rem 1rem;
+  background: transparent;
+  color: var(--accent-error);
+  border: 1px solid var(--accent-error);
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.btn-delete-page:hover {
+  background: var(--accent-error);
+  color: white;
+}
+
+.btn-delete-page:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 /* ===== UTILITY ===== */
 .hidden {
   display: none !important;

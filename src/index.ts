@@ -12,6 +12,7 @@ import {
   DEFAULT_PROJECT,
   readPage,
   writePage,
+  deletePage,
   pageExists,
   generatePage,
   generatePageStreaming,
@@ -559,6 +560,24 @@ app.post('/p/:project/wiki/:slug/revert', async (c) => {
   }
 
   return c.json({ success: true, currentVersion: targetVersion });
+});
+
+// Delete a page
+app.post('/p/:project/wiki/:slug/delete', async (c) => {
+  const project = c.req.param('project');
+  const slug = c.req.param('slug');
+
+  const exists = await pageExists(slug, project);
+  if (!exists) {
+    return c.json({ error: 'Page not found' }, 404);
+  }
+
+  const success = await deletePage(slug, project);
+  if (!success) {
+    return c.json({ error: 'Failed to delete page' }, 500);
+  }
+
+  return c.json({ success: true });
 });
 
 // Start server

@@ -212,6 +212,21 @@ export async function writePage(slug: string, content: string, project: string =
   await fs.writeFile(getPagePath(slug, project), content, 'utf-8');
 }
 
+export async function deletePage(slug: string, project: string = DEFAULT_PROJECT): Promise<boolean> {
+  try {
+    const mdPath = getPagePath(slug, project);
+    const jsonPath = getChatHistoryPath(slug, project);
+
+    // Delete both the .md and .json files
+    await fs.unlink(mdPath).catch(() => {});
+    await fs.unlink(jsonPath).catch(() => {});
+
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export interface PageInfo {
   slug: string;
   title: string;

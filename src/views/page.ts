@@ -218,6 +218,11 @@ export function wikiPage(
       </div>
     </div>
 
+    <!-- Delete Page Section -->
+    <section class="danger-zone">
+      <button class="btn-delete-page" id="btn-delete-page">Delete Page</button>
+    </section>
+
     <script>
       (function() {
         const slug = ${JSON.stringify(slug)};
@@ -1011,6 +1016,45 @@ export function wikiPage(
 
         // Load version history on page load
         loadVersionHistory();
+
+        // ============================================
+        // Delete Page
+        // ============================================
+        const deleteBtn = document.getElementById('btn-delete-page');
+        deleteBtn.addEventListener('click', async () => {
+          const confirmed = confirm(
+            'Are you sure you want to delete this page?\\n\\n' +
+            'This will permanently delete:\\n' +
+            '- All page content\\n' +
+            '- All comments\\n' +
+            '- All version history\\n\\n' +
+            'This action cannot be undone.'
+          );
+
+          if (!confirmed) return;
+
+          deleteBtn.disabled = true;
+          deleteBtn.textContent = 'Deleting...';
+
+          try {
+            const response = await fetch('/p/' + project + '/wiki/' + slug + '/delete', {
+              method: 'POST',
+            });
+
+            const result = await response.json();
+            if (result.success) {
+              window.location.href = '/p/' + project;
+            } else {
+              alert('Error: ' + (result.error || 'Failed to delete page'));
+              deleteBtn.disabled = false;
+              deleteBtn.textContent = 'Delete Page';
+            }
+          } catch (error) {
+            alert('Error: ' + error.message);
+            deleteBtn.disabled = false;
+            deleteBtn.textContent = 'Delete Page';
+          }
+        });
       })();
     </script>
   `,
