@@ -116,6 +116,45 @@ export function layout(
     </svg>
   </button>
 
+  <!-- Cost tracking script - logs costs to console -->
+  <script>
+    (function() {
+      var previousRequestCount = 0;
+
+      function formatCost(cost) {
+        return '$' + cost.toFixed(4);
+      }
+
+      function fetchLatestCost() {
+        fetch('/api/costs?limit=1')
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            if (data.totalRequests > previousRequestCount && data.recentRequests.length > 0) {
+              var req = data.recentRequests[0];
+              console.log('%c API Cost: ' + formatCost(req.totalCost) + ' %c ' + (req.action || 'request') + ' | ' + (req.pageName || ''),
+                'background: #4a5; color: white; padding: 2px 6px; border-radius: 3px;',
+                'color: #666;');
+              previousRequestCount = data.totalRequests;
+            }
+          })
+          .catch(function() {});
+      }
+
+      window.setCostLoading = function(loading) {
+        if (!loading) {
+          // Fetch cost after request completes (delay for OpenRouter to record it)
+          setTimeout(fetchLatestCost, 1500);
+        }
+      };
+
+      // Initialize previous request count
+      fetch('/api/costs?limit=1')
+        .then(function(r) { return r.json(); })
+        .then(function(data) { previousRequestCount = data.totalRequests; })
+        .catch(function() {});
+    })();
+  </script>
+
   <div class="main-wrapper">
     <main>
       ${content}

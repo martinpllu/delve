@@ -1842,27 +1842,49 @@ body[data-sidebar-open="false"] main {
   margin-bottom: 0.75rem;
 }
 
-.settings-section textarea {
+.settings-section textarea,
+.settings-section input[type="text"] {
   width: 100%;
   padding: 0.75rem;
   border: 1px solid var(--border-color);
   border-radius: 4px;
   font-size: 0.9rem;
   font-family: inherit;
-  resize: vertical;
   background: var(--bg-page);
   color: var(--text-primary);
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  box-sizing: border-box;
 }
 
-.settings-section textarea::placeholder {
+.settings-section textarea {
+  resize: vertical;
+}
+
+.settings-section textarea::placeholder,
+.settings-section input[type="text"]::placeholder {
   color: var(--text-tertiary);
 }
 
-.settings-section textarea:focus {
+.settings-section textarea:focus,
+.settings-section input[type="text"]:focus {
   outline: none;
   border-color: var(--text-link);
   box-shadow: 0 0 0 3px rgba(35, 131, 226, 0.15);
+}
+
+.settings-section h2 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0 0 1rem 0;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.settings-section code {
+  background: var(--bg-page);
+  padding: 0.15rem 0.4rem;
+  border-radius: 3px;
+  font-size: 0.85em;
 }
 
 .settings-form .form-footer {

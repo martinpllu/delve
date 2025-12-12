@@ -38,7 +38,8 @@ import {
   readSettings,
   writeSettings,
 } from './wiki.js';
-import { invokeClaude, invokeClaudeStreaming } from './openrouter.js';
+import { invokeModel, invokeModelStreaming, type RequestContext } from './openrouter.js';
+import { getCostSummary } from './costs.js';
 import { homePage } from './views/home.js';
 import { wikiPage, errorPage, generatePageView } from './views/page.js';
 import { settingsPage } from './views/settings.js';
@@ -59,6 +60,13 @@ app.use('/style.css', serveStatic({ root: './public' }));
 app.get('/api/projects', async (c) => {
   const projects = await listProjects();
   return c.json({ projects });
+});
+
+// Get cost summary
+app.get('/api/costs', async (c) => {
+  const limit = parseInt(c.req.query('limit') || '10');
+  const summary = getCostSummary(limit);
+  return c.json(summary);
 });
 
 // Create a new project
@@ -98,8 +106,9 @@ app.post('/settings', async (c) => {
   try {
     const body = await c.req.parseBody();
     const systemPrompt = typeof body['systemPrompt'] === 'string' ? body['systemPrompt'] : '';
+    const model = typeof body['model'] === 'string' ? body['model'] : '';
 
-    await writeSettings({ systemPrompt });
+    await writeSettings({ systemPrompt, model });
     return c.json({ success: true });
   } catch (error) {
     console.error('Settings error:', error);
@@ -160,9 +169,10 @@ app.post('/p/:project/generate', async (c) => {
     });
   }
 
-  // Get user's custom system prompt
+  // Get user settings
   const settings = await readSettings();
   const systemPrompt = settings.systemPrompt || undefined;
+  const model = settings.model || undefined;
 
   return streamSSE(c, async (stream) => {
     try {
@@ -173,7 +183,7 @@ app.post('/p/:project/generate', async (c) => {
       });
 
       // Stream content chunks
-      const generator = generatePageStreaming(topicStr, undefined, project, systemPrompt);
+      const generator = generatePageStreaming(topicStr, undefined, project, systemPrompt, model);
       let result = await generator.next();
 
       while (!result.done) {
@@ -251,7 +261,8 @@ app.post('/p/:project/wiki/:slug/chat', async (c) => {
     const userMessage = message.trim();
     const settings = await readSettings();
     const systemPrompt = settings.systemPrompt || undefined;
-    const { content } = await generatePage(topic, userMessage, project, systemPrompt);
+    const model = settings.model || undefined;
+    const { content } = await generatePage(topic, userMessage, project, systemPrompt, model);
 
     // Add version for the edit
     await addVersion(slug, content, userMessage, 'edit', project);
@@ -299,8 +310,14 @@ app.post('/p/:project/wiki/:slug/comment', async (c) => {
     // Generate AI response
     const settings = await readSettings();
     const systemPrompt = settings.systemPrompt || undefined;
+    const model = settings.model || undefined;
     const prompt = buildCommentPrompt(pageContent, null, message.trim());
-    const aiResponse = await invokeClaude(prompt, systemPrompt);
+    const context: RequestContext = {
+      action: 'comment',
+      pageName: unslugify(slug),
+      promptExcerpt: message.trim().slice(0, 50),
+    };
+    const aiResponse = await invokeModel(prompt, systemPrompt, model, context);
 
     // Save comment with AI response
     const thread = await addPageComment(slug, message.trim(), aiResponse, project);
@@ -343,8 +360,14 @@ app.post('/p/:project/wiki/:slug/comment/:id/reply', async (c) => {
       }));
       const settings = await readSettings();
       const systemPrompt = settings.systemPrompt || undefined;
+      const model = settings.model || undefined;
       const prompt = buildCommentPrompt(pageContent, null, message.trim(), conversationHistory);
-      const aiResponse = await invokeClaude(prompt, systemPrompt);
+      const context: RequestContext = {
+        action: 'reply',
+        pageName: unslugify(slug),
+        promptExcerpt: message.trim().slice(0, 50),
+      };
+      const aiResponse = await invokeModel(prompt, systemPrompt, model, context);
       thread = await addReplyToPageComment(slug, threadId, aiResponse, 'assistant', project);
     }
 
@@ -417,8 +440,14 @@ app.post('/p/:project/wiki/:slug/inline', async (c) => {
     // Generate AI response
     const settings = await readSettings();
     const systemPrompt = settings.systemPrompt || undefined;
+    const model = settings.model || undefined;
     const prompt = buildCommentPrompt(pageContent, text, message.trim());
-    const aiResponse = await invokeClaude(prompt, systemPrompt);
+    const context: RequestContext = {
+      action: 'inline-comment',
+      pageName: unslugify(slug),
+      promptExcerpt: message.trim().slice(0, 50),
+    };
+    const aiResponse = await invokeModel(prompt, systemPrompt, model, context);
 
     // Save inline comment with AI response
     const thread = await addInlineComment(slug, anchor, message.trim(), aiResponse, project);
@@ -462,8 +491,14 @@ app.post('/p/:project/wiki/:slug/inline/:id/reply', async (c) => {
       }));
       const settings = await readSettings();
       const systemPrompt = settings.systemPrompt || undefined;
+      const model = settings.model || undefined;
       const prompt = buildCommentPrompt(pageContent, selectedText, message.trim(), conversationHistory);
-      const aiResponse = await invokeClaude(prompt, systemPrompt);
+      const context: RequestContext = {
+        action: 'inline-reply',
+        pageName: unslugify(slug),
+        promptExcerpt: message.trim().slice(0, 50),
+      };
+      const aiResponse = await invokeModel(prompt, systemPrompt, model, context);
       thread = await addReplyToInlineComment(slug, threadId, aiResponse, 'assistant', project);
     }
 
@@ -524,13 +559,19 @@ app.post('/p/:project/wiki/:slug/inline-edit', async (c) => {
 
   const settings = await readSettings();
   const systemPrompt = settings.systemPrompt || undefined;
+  const model = settings.model || undefined;
 
   return streamSSE(c, async (stream) => {
     try {
       const prompt = buildInlineEditPrompt(pageContent, text, instruction.trim());
+      const context: RequestContext = {
+        action: 'inline-edit',
+        pageName: unslugify(slug),
+        promptExcerpt: instruction.trim().slice(0, 50),
+      };
 
       let updatedContent = '';
-      for await (const chunk of invokeClaudeStreaming(prompt, systemPrompt)) {
+      for await (const chunk of invokeModelStreaming(prompt, systemPrompt, model, context)) {
         updatedContent += chunk;
         await stream.writeSSE({
           event: 'chunk',

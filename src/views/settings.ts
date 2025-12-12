@@ -1,5 +1,6 @@
 import { layout } from './layout.js';
 import type { PageInfo, UserSettings } from '../wiki.js';
+import { config } from '../config.js';
 
 function escapeHtml(text: string): string {
   return text
@@ -26,6 +27,25 @@ export function settingsPage(
 
       <form action="/settings" method="POST" class="settings-form" id="settings-form">
         <div class="settings-section">
+          <h2>OpenRouter</h2>
+          <label for="model">Model</label>
+          <p class="settings-description">
+            Specify the model to use for generation.
+            <br><br>
+            Find model names at <a href="https://openrouter.ai/models" target="_blank" rel="noopener">openrouter.ai/models</a>.
+            <br><br>
+            Examples: <code>anthropic/claude-opus-4.5</code>, <code>openai/gpt-5.2</code>, <code>google/gemini-3-pro-preview</code>, <code>google/gemini-2.5-flash</code>, <code>x-ai/grok-4-fast</code>
+          </p>
+          <input
+            type="text"
+            id="model"
+            name="model"
+            value="${escapeHtml(settings.model || config.model)}"
+          />
+        </div>
+
+        <div class="settings-section">
+          <h2>Prompts</h2>
           <label for="system-prompt">Custom System Prompt</label>
           <p class="settings-description">
             Add custom instructions that will be included with every LLM request.

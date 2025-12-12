@@ -4,7 +4,7 @@ loadEnv();
 
 export const config = {
   openrouterApiKey: process.env.OPENROUTER_API_KEY ?? '',
-  model: process.env.MODEL ?? 'anthropic/claude-sonnet-4',
+  model: process.env.MODEL ?? 'anthropic/claude-opus-4.5',
   dataDir: process.env.DATA_DIR ?? 'data',
   detailLevel: process.env.DETAIL_LEVEL ?? 'comprehensive',
   port: parseInt(process.env.PORT ?? '3000'),

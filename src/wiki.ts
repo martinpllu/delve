@@ -2,7 +2,7 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import { marked } from 'marked';
 import { config, buildPrompt } from './config.js';
-import { invokeClaude, invokeClaudeStreaming } from './openrouter.js';
+import { invokeModel, invokeModelStreaming, type RequestContext } from './openrouter.js';
 
 // ============================================
 // User Settings
@@ -10,10 +10,12 @@ import { invokeClaude, invokeClaudeStreaming } from './openrouter.js';
 
 export interface UserSettings {
   systemPrompt: string;
+  model: string;
 }
 
 const DEFAULT_SETTINGS: UserSettings = {
   systemPrompt: '',
+  model: '',
 };
 
 function getSettingsPath(): string {
@@ -348,13 +350,21 @@ export async function generatePage(
   topic: string,
   userMessage?: string,
   project: string = DEFAULT_PROJECT,
-  systemPrompt?: string
+  systemPrompt?: string,
+  model?: string
 ): Promise<{ slug: string; content: string }> {
   const slug = slugify(topic);
   const existingContent = await readPage(slug, project);
 
   const prompt = buildPrompt(topic, existingContent ?? undefined, userMessage);
-  const markdownContent = await invokeClaude(prompt, systemPrompt);
+
+  const context: RequestContext = {
+    action: existingContent ? 'edit' : 'generate',
+    pageName: topic,
+    promptExcerpt: userMessage ? userMessage.slice(0, 50) : `Generate: ${topic}`.slice(0, 50),
+  };
+
+  const markdownContent = await invokeModel(prompt, systemPrompt, model, context);
 
   await writePage(slug, markdownContent, project);
 
@@ -368,15 +378,22 @@ export async function* generatePageStreaming(
   topic: string,
   userMessage?: string,
   project: string = DEFAULT_PROJECT,
-  systemPrompt?: string
+  systemPrompt?: string,
+  model?: string
 ): AsyncGenerator<string, { slug: string; content: string }> {
   const slug = slugify(topic);
   const existingContent = await readPage(slug, project);
 
   const prompt = buildPrompt(topic, existingContent ?? undefined, userMessage);
 
+  const context: RequestContext = {
+    action: existingContent ? 'edit' : 'generate',
+    pageName: topic,
+    promptExcerpt: userMessage ? userMessage.slice(0, 50) : `Generate: ${topic}`.slice(0, 50),
+  };
+
   let fullContent = '';
-  for await (const chunk of invokeClaudeStreaming(prompt, systemPrompt)) {
+  for await (const chunk of invokeModelStreaming(prompt, systemPrompt, model, context)) {
     fullContent += chunk;
     yield chunk;
   }

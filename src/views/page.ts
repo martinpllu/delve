@@ -69,7 +69,7 @@ function renderCommentThread(thread: CommentThread, _slug: string, isInline: boo
 
 function renderPageComments(comments: CommentThread[], slug: string): string {
   if (comments.length === 0) {
-    return '<p class="no-comments">No comments yet. Ask a question below!</p>';
+    return '<p class="no-comments">No questions yet. Ask something below!</p>';
   }
 
   return comments.map(thread => renderCommentThread(thread, slug, false)).join('');
@@ -131,7 +131,7 @@ export function wikiPage(
     <!-- Selection Toolbar (hidden by default) -->
     <div class="selection-toolbar hidden" id="selection-toolbar">
       <button class="toolbar-btn" id="btn-comment" title="Add comment">
-        <span class="toolbar-icon">💬</span> Comment
+        <span class="toolbar-icon">💬</span> Ask
       </button>
       <button class="toolbar-btn" id="btn-edit" title="Edit selection">
         <span class="toolbar-icon">✏️</span> Edit
@@ -151,8 +151,8 @@ export function wikiPage(
     <section class="chat-section">
       <!-- Tab Toggle -->
       <div class="chat-tabs">
-        <button class="chat-tab active" data-tab="comment">Comment</button>
-        <button class="chat-tab" data-tab="edit">Edit Page</button>
+        <button class="chat-tab active" data-tab="comment">Ask</button>
+        <button class="chat-tab" data-tab="edit">Edit</button>
       </div>
 
       <!-- Comment Tab Content -->
@@ -169,7 +169,7 @@ export function wikiPage(
             rows="3"
             required
           ></textarea>
-          <button type="submit" id="comment-submit">Comment</button>
+          <button type="submit" id="comment-submit">Ask</button>
         </form>
       </div>
 
@@ -327,10 +327,12 @@ export function wikiPage(
             const formData = new FormData();
             formData.append('message', message);
 
+            if (window.setCostLoading) window.setCostLoading(true);
             const response = await fetch('/p/' + project + '/wiki/' + slug + '/comment', {
               method: 'POST',
               body: formData,
             });
+            if (window.setCostLoading) window.setCostLoading(false);
 
             const result = await response.json();
             if (result.success) {
@@ -340,11 +342,12 @@ export function wikiPage(
               alert('Error: ' + result.error);
             }
           } catch (error) {
+            if (window.setCostLoading) window.setCostLoading(false);
             alert('Error: ' + error.message);
           } finally {
             commentTextarea.disabled = false;
             commentButton.disabled = false;
-            commentButton.textContent = 'Comment';
+            commentButton.textContent = 'Ask';
           }
         });
 
@@ -384,10 +387,12 @@ export function wikiPage(
               const formData = new FormData();
               formData.append('message', message);
 
+              if (window.setCostLoading) window.setCostLoading(true);
               const response = await fetch('/p/' + project + '/wiki/' + slug + '/' + endpoint + '/' + threadId + '/reply', {
                 method: 'POST',
                 body: formData,
               });
+              if (window.setCostLoading) window.setCostLoading(false);
 
               const result = await response.json();
               if (result.success) {
@@ -396,6 +401,7 @@ export function wikiPage(
                 alert('Error: ' + result.error);
               }
             } catch (error) {
+              if (window.setCostLoading) window.setCostLoading(false);
               alert('Error: ' + error.message);
             }
           }
@@ -505,7 +511,7 @@ export function wikiPage(
               <textarea id="popover-textarea" placeholder="Ask about this..." rows="3"></textarea>
               <div class="popover-buttons">
                 <button class="btn-cancel" id="popover-cancel">Cancel</button>
-                <button class="btn-submit" id="popover-submit">Comment</button>
+                <button class="btn-submit" id="popover-submit">Ask</button>
               </div>
             \`;
           } else {
@@ -646,10 +652,12 @@ export function wikiPage(
                   formData.append('prefix', context.prefix);
                   formData.append('suffix', context.suffix);
 
+                  if (window.setCostLoading) window.setCostLoading(true);
                   const response = await fetch('/p/' + project + '/wiki/' + slug + '/inline', {
                     method: 'POST',
                     body: formData,
                   });
+                  if (window.setCostLoading) window.setCostLoading(false);
 
                   console.log('Got response, parsing JSON...');
                   const result = await response.json();
@@ -694,6 +702,7 @@ export function wikiPage(
                 formData.append('instruction', message);
                 formData.append('text', context.text);
 
+                if (window.setCostLoading) window.setCostLoading(true);
                 const response = await fetch('/p/' + project + '/wiki/' + slug + '/inline-edit', {
                   method: 'POST',
                   body: formData,
@@ -716,9 +725,11 @@ export function wikiPage(
                       try {
                         const data = JSON.parse(line.slice(6));
                         if (data.success) {
+                          if (window.setCostLoading) window.setCostLoading(false);
                           window.location.reload();
                         }
                         if (data.message) {
+                          if (window.setCostLoading) window.setCostLoading(false);
                           alert('Error: ' + data.message);
                           hidePopover();
                         }
@@ -728,6 +739,7 @@ export function wikiPage(
                 }
               }
             } catch (error) {
+              if (window.setCostLoading) window.setCostLoading(false);
               alert('Error: ' + error.message);
               hidePopover();
             }
@@ -827,10 +839,12 @@ export function wikiPage(
               const formData = new FormData();
               formData.append('message', message);
 
+              if (window.setCostLoading) window.setCostLoading(true);
               const response = await fetch('/p/' + project + '/wiki/' + slug + '/inline/' + commentId + '/reply', {
                 method: 'POST',
                 body: formData,
               });
+              if (window.setCostLoading) window.setCostLoading(false);
 
               const result = await response.json();
               if (result.success && result.thread) {
@@ -860,6 +874,7 @@ export function wikiPage(
                 window.location.reload();
               }
             } catch (error) {
+              if (window.setCostLoading) window.setCostLoading(false);
               alert('Error: ' + error.message);
               window.location.reload();
             }
@@ -1101,6 +1116,7 @@ export function generatePageView(topic: string, project: string = 'default'): st
 
       async function generate() {
         try {
+          if (window.setCostLoading) window.setCostLoading(true);
           const response = await fetch('/p/' + project + '/generate', {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -1129,6 +1145,7 @@ export function generatePageView(topic: string, project: string = 'default'): st
                   }
                   if (data.url) {
                     // Complete - redirect (replace so generate page isn't in history)
+                    if (window.setCostLoading) window.setCostLoading(false);
                     smd.parser_end(parser);
                     setTimeout(() => {
                       window.location.replace(data.url);
@@ -1136,6 +1153,7 @@ export function generatePageView(topic: string, project: string = 'default'): st
                   }
                   if (data.message) {
                     // Error
+                    if (window.setCostLoading) window.setCostLoading(false);
                     streamingContent.innerHTML = '<p class="error">Error: ' + data.message + '</p>';
                   }
                 } catch {}
@@ -1143,6 +1161,7 @@ export function generatePageView(topic: string, project: string = 'default'): st
             }
           }
         } catch (error) {
+          if (window.setCostLoading) window.setCostLoading(false);
           streamingContent.innerHTML = '<p class="error">Connection error: ' + error.message + '</p>';
         }
       }

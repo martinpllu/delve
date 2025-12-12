@@ -74,6 +74,7 @@ export function homePage(pages: PageInfo[], project: string = 'default', project
         const parser = smd.parser(renderer);
 
         try {
+          if (window.setCostLoading) window.setCostLoading(true);
           const response = await fetch('/p/' + currentProject + '/generate', {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -102,6 +103,7 @@ export function homePage(pages: PageInfo[], project: string = 'default', project
                   }
                   if (data.url) {
                     // Complete - redirect
+                    if (window.setCostLoading) window.setCostLoading(false);
                     smd.parser_end(parser);
                     setTimeout(() => {
                       window.location.href = data.url;
@@ -109,6 +111,7 @@ export function homePage(pages: PageInfo[], project: string = 'default', project
                   }
                   if (data.message) {
                     // Error
+                    if (window.setCostLoading) window.setCostLoading(false);
                     streamingContent.innerHTML = '<p class="error">Error: ' + data.message + '</p>';
                   }
                 } catch {}
@@ -116,6 +119,7 @@ export function homePage(pages: PageInfo[], project: string = 'default', project
             }
           }
         } catch (error) {
+          if (window.setCostLoading) window.setCostLoading(false);
           streamingContent.innerHTML = '<p class="error">Connection error: ' + error.message + '</p>';
         }
       });
