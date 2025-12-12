@@ -20,6 +20,21 @@ function escapeHtml(text: string): string {
     .replace(/"/g, '&quot;');
 }
 
+function renderSimpleMarkdown(text: string): string {
+  let s = escapeHtml(text);
+  // Bold: **text** or __text__
+  s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  s = s.replace(/__(.+?)__/g, '<strong>$1</strong>');
+  // Italic: *text* or _text_
+  s = s.replace(/\*(.+?)\*/g, '<em>$1</em>');
+  s = s.replace(/_(.+?)_/g, '<em>$1</em>');
+  // Code: `text`
+  s = s.replace(/`(.+?)`/g, '<code>$1</code>');
+  // Line breaks
+  s = s.replace(/\n/g, '<br>');
+  return s;
+}
+
 function renderEditHistory(history: ChatMessage[]): string {
   if (history.length === 0) return '<p class="no-history">No edit history yet.</p>';
 
@@ -42,7 +57,7 @@ function renderCommentThread(thread: CommentThread, slug: string, isInline: bool
   const messages = thread.messages.map(msg => `
     <div class="comment-message comment-message-${msg.role}">
       <span class="comment-role">${msg.role === 'user' ? 'You' : 'AI'}:</span>
-      <span class="comment-content">${escapeHtml(msg.content)}</span>
+      <span class="comment-content">${msg.role === 'assistant' ? renderSimpleMarkdown(msg.content) : escapeHtml(msg.content)}</span>
       <span class="comment-timestamp">${formatTimestamp(msg.timestamp)}</span>
     </div>
   `).join('');
@@ -222,7 +237,7 @@ export function wikiPage(
         const editButton = document.getElementById('edit-submit');
 
         editForm.addEventListener('submit', () => {
-          editTextarea.disabled = true;
+          // Only disable the button, not the textarea (disabled fields don't submit)
           editButton.disabled = true;
           editButton.innerHTML = '<span class="spinner"></span> Updating...';
         });
