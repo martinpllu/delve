@@ -245,6 +245,7 @@ export interface PageVersion {
   timestamp: string;         // ISO timestamp
   createdBy: 'generation' | 'edit' | 'revert';
   revertedFrom?: number;     // If createdBy='revert', source version
+  supersededAt?: string;     // ISO timestamp when this version was invalidated by a revert+edit
 }
 
 export interface PageData {
@@ -319,6 +320,8 @@ async function ensureVersionsInitialized(pageData: PageData, slug: string): Prom
 
 /**
  * Adds a new version after an edit. Returns the new version.
+ * If current pointer is behind the latest version (after a revert),
+ * marks all versions beyond the pointer as superseded.
  */
 export async function addVersion(
   slug: string,
@@ -329,6 +332,15 @@ export async function addVersion(
   const pageData = await readPageData(slug);
   await ensureVersionsInitialized(pageData, slug);
 
+  const now = new Date().toISOString();
+
+  // Mark versions beyond current pointer as superseded (if any)
+  for (const v of pageData.versions!) {
+    if (v.version > pageData.currentVersion! && !v.supersededAt) {
+      v.supersededAt = now;
+    }
+  }
+
   // Get next version number (always incrementing, even after reverts)
   const nextVersion = pageData.versions!.length + 1;
 
@@ -336,7 +348,7 @@ export async function addVersion(
     version: nextVersion,
     content,
     editPrompt,
-    timestamp: new Date().toISOString(),
+    timestamp: now,
     createdBy,
   };
 
@@ -374,7 +386,8 @@ export async function revertToVersion(
 }
 
 /**
- * Returns visible versions (up to current pointer) for UI display.
+ * Returns visible versions for UI display.
+ * Excludes superseded versions (those invalidated by edits after a revert).
  * Most recent first.
  */
 export async function getVersionHistory(slug: string): Promise<PageVersion[]> {
@@ -382,8 +395,10 @@ export async function getVersionHistory(slug: string): Promise<PageVersion[]> {
   await ensureVersionsInitialized(pageData, slug);
   await writePageData(slug, pageData); // Persist migration if it happened
 
-  // Only return versions up to current pointer
-  const visible = pageData.versions!.filter(v => v.version <= pageData.currentVersion!);
+  // Only return non-superseded versions up to current pointer
+  const visible = pageData.versions!.filter(
+    v => v.version <= pageData.currentVersion! && !v.supersededAt
+  );
   // Return most recent first
   return visible.slice().reverse();
 }
