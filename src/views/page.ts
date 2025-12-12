@@ -53,7 +53,7 @@ function renderEditHistory(history: ChatMessage[]): string {
   `;
 }
 
-function renderCommentThread(thread: CommentThread, slug: string, isInline: boolean = false): string {
+function renderCommentThread(thread: CommentThread, _slug: string, isInline: boolean = false): string {
   const messages = thread.messages.map(msg => `
     <div class="comment-message comment-message-${msg.role}">
       <span class="comment-role">${msg.role === 'user' ? 'You' : 'AI'}:</span>

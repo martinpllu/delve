@@ -76,15 +76,20 @@ export function buildInlineEditPrompt(
   selectedText: string,
   instruction: string
 ): string {
-  return `You are editing a specific part of a wiki page.
+  return `You are editing a wiki page. The user has selected some text in the rendered HTML view and wants it changed.
 
-Full page content:
+Current page content (markdown):
 ${pageContent}
 
-The user selected this text to edit:
+The user selected this text in the rendered page (this is the HTML-rendered text, not the raw markdown):
 "${selectedText}"
 
 Their edit instruction: ${instruction}
 
-Return ONLY the replacement text for the selected portion. Do not include any explanation or the rest of the page - just the new text that should replace the selection. Maintain proper markdown formatting.`;
+Your task:
+1. Find the part of the markdown that corresponds to the selected text (accounting for wiki links like [[term]], formatting, etc.)
+2. Apply the user's edit instruction to that section
+3. Return the COMPLETE updated page content
+
+Return ONLY the full updated markdown content - no explanations, no code blocks, just the raw markdown for the entire page.`;
 }

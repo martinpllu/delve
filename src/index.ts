@@ -388,22 +388,21 @@ app.post('/wiki/:slug/inline-edit', async (c) => {
     try {
       const prompt = buildInlineEditPrompt(pageContent, text, instruction.trim());
 
-      let newText = '';
+      let updatedContent = '';
       for await (const chunk of invokeClaudeStreaming(prompt)) {
-        newText += chunk;
+        updatedContent += chunk;
         await stream.writeSSE({
           event: 'chunk',
           data: JSON.stringify({ content: chunk }),
         });
       }
 
-      // Replace the selected text in the page content
-      const updatedContent = pageContent.replace(text, newText);
+      // The LLM returns the full updated page content
       await writePage(slug, updatedContent);
 
       await stream.writeSSE({
         event: 'complete',
-        data: JSON.stringify({ newText, success: true }),
+        data: JSON.stringify({ success: true }),
       });
     } catch (error) {
       console.error('Inline edit error:', error);
