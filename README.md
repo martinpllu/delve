@@ -4,7 +4,7 @@
 
 Describe what you want to know. Watch it stream into existence. Refine it through inline comments and natural language edits. Click a link to generate the next page.
 
-![Delve demo](demo.gif)
+https://github.com/user-attachments/assets/7e2a4393-3c35-41e9-9a9c-b61f1a372f50
 
 ## Why Delve?
 
