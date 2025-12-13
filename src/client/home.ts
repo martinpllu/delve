@@ -30,12 +30,11 @@ export function initHome(): void {
     const topic = topicInput.value.trim();
     if (!topic) return;
 
-    // Show streaming UI with placeholder title (first line of topic, before any newline)
-    const placeholderTitle = topic.split('\n')[0];
+    // Show streaming UI with no title initially (AI will decide the title)
     generateSection.style.display = 'none';
     streamingSection.style.display = 'block';
     streamingContent.innerHTML = '';
-    if (streamingTitle) streamingTitle.textContent = placeholderTitle;
+    if (streamingTitle) streamingTitle.textContent = '';
 
     // Import streaming-markdown from CDN
     // @ts-ignore - External CDN module
@@ -66,20 +65,26 @@ export function initHome(): void {
         buffer = lines.pop() || '';
 
         for (const line of lines) {
+          if (line.startsWith('event: ')) {
+            // Track current event type
+            continue;
+          }
           if (line.startsWith('data: ')) {
             try {
               const data = JSON.parse(line.slice(6));
 
+              // Handle title event from server (AI-determined title)
+              if (data.title && streamingTitle) {
+                streamingTitle.textContent = data.title;
+              }
+
               if (data.content) {
                 smd.parser_write(parser, data.content);
 
-                // Keep updating title from streamed H1 as it grows
-                if (streamingTitle) {
-                  const streamedH1 = streamingContent.querySelector('h1');
-                  if (streamedH1) {
-                    streamingTitle.textContent = streamedH1.textContent;
-                    streamedH1.style.display = 'none';
-                  }
+                // Hide the H1 in streamed content since we show it in the header
+                const streamedH1 = streamingContent.querySelector('h1');
+                if (streamedH1) {
+                  streamedH1.style.display = 'none';
                 }
               }
               if (data.url) {

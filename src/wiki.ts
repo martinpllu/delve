@@ -66,6 +66,43 @@ export function slugify(text: string): string {
     .slice(0, 100);               // limit length for filesystem safety
 }
 
+/**
+ * Generate a unique slug by appending a number if the base slug already exists.
+ * e.g., "dns" -> "dns-2" -> "dns-3" etc.
+ */
+export async function uniqueSlug(baseSlug: string, project: string = DEFAULT_PROJECT): Promise<string> {
+  if (!(await pageExists(baseSlug, project))) {
+    return baseSlug;
+  }
+
+  let counter = 2;
+  while (await pageExists(`${baseSlug}-${counter}`, project)) {
+    counter++;
+  }
+  return `${baseSlug}-${counter}`;
+}
+
+/**
+ * Generate a unique title by appending a number if needed.
+ * e.g., "DNS" -> "DNS (2)" -> "DNS (3)" etc.
+ */
+export async function uniqueTitle(baseTitle: string, project: string = DEFAULT_PROJECT): Promise<{ title: string; slug: string }> {
+  const baseSlug = slugify(baseTitle);
+
+  if (!(await pageExists(baseSlug, project))) {
+    return { title: baseTitle, slug: baseSlug };
+  }
+
+  let counter = 2;
+  while (await pageExists(`${baseSlug}-${counter}`, project)) {
+    counter++;
+  }
+  return {
+    title: `${baseTitle} (${counter})`,
+    slug: `${baseSlug}-${counter}`,
+  };
+}
+
 export function unslugify(slug: string): string {
   return slug
     .split('-')
@@ -390,23 +427,31 @@ export async function generatePage(
 }
 
 /**
- * Streaming version - yields chunks and saves when complete
+ * Extract title from markdown H1 heading
+ */
+export function extractTitleFromMarkdown(content: string): string | null {
+  // Match H1 that ends with newline, or at end of content (for complete documents)
+  const h1Match = content.match(/^#\s+(.+?)(?:\n|$)/m);
+  return h1Match ? h1Match[1].trim() : null;
+}
+
+/**
+ * Streaming version - yields chunks but does NOT save.
+ * The caller is responsible for saving the content with the appropriate slug.
+ * Returns the full content when complete.
  */
 export async function* generatePageStreaming(
-  topic: string,
+  userRequest: string,
   userMessage?: string,
   project: string = DEFAULT_PROJECT,
   settings?: UserSettings
-): AsyncGenerator<string, { slug: string; content: string }> {
-  const slug = slugify(topic);
-  const existingContent = await readPage(slug, project);
-
-  const prompt = buildPrompt(topic, existingContent ?? undefined, userMessage);
+): AsyncGenerator<string, string> {
+  const prompt = buildPrompt(userRequest, undefined, userMessage);
 
   const context: RequestContext = {
-    action: existingContent ? 'edit' : 'generate',
-    pageName: topic,
-    promptExcerpt: userMessage ? userMessage.slice(0, 50) : `Generate: ${topic}`.slice(0, 50),
+    action: 'generate',
+    pageName: userRequest,
+    promptExcerpt: userMessage ? userMessage.slice(0, 50) : `Generate: ${userRequest}`.slice(0, 50),
   };
 
   let fullContent = '';
@@ -415,16 +460,24 @@ export async function* generatePageStreaming(
     yield chunk;
   }
 
-  await writePage(slug, fullContent, project);
+  return fullContent;
+}
 
-  // Save the original title with preserved capitalization for new pages
-  if (!existingContent) {
-    const pageData = await readPageData(slug, project);
-    pageData.title = topic;
-    await writePageData(slug, pageData, project);
-  }
+/**
+ * Save a generated page with the given slug and title.
+ */
+export async function saveGeneratedPage(
+  slug: string,
+  title: string,
+  content: string,
+  project: string = DEFAULT_PROJECT
+): Promise<void> {
+  await writePage(slug, content, project);
 
-  return { slug, content: fullContent };
+  // Save the title with preserved capitalization
+  const pageData = await readPageData(slug, project);
+  pageData.title = title;
+  await writePageData(slug, pageData, project);
 }
 
 // ============================================

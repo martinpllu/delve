@@ -16,9 +16,12 @@ import {
   pageExists,
   generatePage,
   generatePageStreaming,
+  saveGeneratedPage,
+  extractTitleFromMarkdown,
   renderMarkdown,
   unslugify,
   slugify,
+  uniqueTitle,
   readPageData,
   writePageData,
   addPageComment,
@@ -188,50 +191,75 @@ app.post('/:project/generate', async (c) => {
     return c.json({ error: 'Please provide a topic' }, 400);
   }
 
-  const topicStr = topic.trim();
-  // First line is the title, rest is instructions for generation
-  const lines = topicStr.split('\n');
-  const title = lines[0].trim();
-  const instructions = lines.slice(1).join('\n').trim() || undefined;
-  const slug = slugify(title);
-
-  // If page already exists, redirect immediately without regenerating
-  if (await pageExists(slug, project)) {
-    return streamSSE(c, async (stream) => {
-      await stream.writeSSE({
-        event: 'complete',
-        data: JSON.stringify({ slug, url: `/${project}/${slug}` }),
-      });
-    });
-  }
+  const userRequest = topic.trim();
 
   // Get user settings
   const settings = await readSettings();
 
   return streamSSE(c, async (stream) => {
     try {
-      // Send start event
+      // Send start event (no title/slug yet - AI will decide)
       await stream.writeSSE({
         event: 'start',
-        data: JSON.stringify({ topic: title, slug }),
+        data: JSON.stringify({}),
       });
 
-      // Stream content chunks
-      const generator = generatePageStreaming(title, instructions, project, settings);
+      // Stream content chunks, parsing H1 for title
+      const generator = generatePageStreaming(userRequest, undefined, project, settings);
       let result = await generator.next();
+      let fullContent = '';
+      let titleSent = false;
+      let finalTitle: string | null = null;
+      let finalSlug: string | null = null;
 
       while (!result.done) {
+        const chunk = result.value;
+        fullContent += chunk;
+
+        // Try to detect title from first H1 heading (only when we have a complete line with newline)
+        if (!titleSent) {
+          const h1Match = fullContent.match(/^#\s+(.+?)\n/m);
+          if (h1Match) {
+            const baseTitle = h1Match[1].trim();
+            // Get unique title/slug (appends number if page exists)
+            const unique = await uniqueTitle(baseTitle, project);
+            finalTitle = unique.title;
+            finalSlug = unique.slug;
+
+            // Send title event
+            await stream.writeSSE({
+              event: 'title',
+              data: JSON.stringify({ title: finalTitle, slug: finalSlug }),
+            });
+            titleSent = true;
+          }
+        }
+
         await stream.writeSSE({
           event: 'chunk',
-          data: JSON.stringify({ content: result.value }),
+          data: JSON.stringify({ content: chunk }),
         });
         result = await generator.next();
       }
 
+      // Generator returns full content
+      const generatedContent = result.value;
+
+      // If we didn't detect a title during streaming, extract it now
+      if (!finalSlug) {
+        const baseTitle = extractTitleFromMarkdown(generatedContent) || userRequest;
+        const unique = await uniqueTitle(baseTitle, project);
+        finalTitle = unique.title;
+        finalSlug = unique.slug;
+      }
+
+      // Save the page with the slug we determined
+      await saveGeneratedPage(finalSlug, finalTitle!, generatedContent, project);
+
       // Send complete event
       await stream.writeSSE({
         event: 'complete',
-        data: JSON.stringify({ slug, url: `/${project}/${slug}` }),
+        data: JSON.stringify({ slug: finalSlug, url: `/${project}/${finalSlug}` }),
       });
     } catch (error) {
       console.error('Generation error:', error);

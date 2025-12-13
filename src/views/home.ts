@@ -20,7 +20,7 @@ export function homePage(pages: PageInfo[], project: string = DEFAULT_PROJECT, p
           required
           autofocus
         ></textarea>
-        <p class="tip">Tip: Add instructions on a new line to guide page generation.</p>
+        <p class="tip">Tip: You can add instructions like "focus on recent developments" or "include code examples"</p>
         <button type="submit" id="generate-btn">Create <kbd class="shortcut-hint" data-mac="⌘↵" data-other="Ctrl+↵"></kbd></button>
       </form>
     </section>

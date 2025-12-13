@@ -23,14 +23,14 @@ export function buildPrompt(
 
   return `You are a wiki page generator. Output ONLY the markdown content - no explanations, no code block wrappers, just raw markdown.
 
-Topic: ${topic}
+User's request: ${topic}
 
 ${contentSection}
 ${instructionSection}
 
 Guidelines:
 - Keep it SHORT: about 200-300 words maximum (roughly one page)
-- Start with a level-1 heading (# Topic Name)
+- Start with a level-1 heading (# Topic Name) - choose an appropriate, clean title based on the user's request
 - Brief intro paragraph (2-3 sentences)
 - 2-3 key sections with bullet points
 - Use [[WikiLinks]] liberally for any notable entity: people, books, places, concepts, historical events, or anything wiki-page-worthy
