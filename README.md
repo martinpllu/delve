@@ -1,6 +1,6 @@
 # Delve
 
-**An AI-powered wiki engine for building knowledge bases through conversation.**
+**A private, local-first AI wiki for building knowledge bases through conversation.**
 
 Describe what you want to know. Watch it stream into existence. Refine it through inline comments and natural language edits. Click a link to generate the next page.
 
@@ -12,19 +12,19 @@ https://github.com/user-attachments/assets/7e2a4393-3c35-41e9-9a9c-b61f1a372f50
 
 Chat interfaces are ephemeral. You ask, you get an answer, it scrolls away. Delve turns AI responses into **persistent, editable, interconnected pages** you can build on over time.
 
-- Pages are markdown files you own
+- Pages are markdown files stored locally on your machine
 - `[[WikiLinks]]` connect concepts and auto-generate new pages on click
-- Full version history with branching — revert to v3, keep editing, v4-6 still recoverable
+- Full version history with branching: revert to v3, keep editing, v4-6 still recoverable
 - Organize into projects for separate knowledge bases
 
 ### "Why not Obsidian + Claude Code?"
 
 You could. Delve is for people who want that workflow without the glue work:
 
-- **Streaming generation** — content appears word-by-word as it's written, not after a loading spinner
-- **Inline comments anchored to text** — select a passage, ask a question, get a response attached to that exact location (survives edits)
-- **Chat-based editing** — describe what you want changed in natural language, or select text for targeted inline edits
-- **Auto-generating wiki links** — red links become new pages on click, enabling serendipitous exploration
+- **Streaming generation**: content appears word-by-word as it's written, not after a loading spinner
+- **Inline comments anchored to text**: select a passage, ask a question, get a response attached to that exact location (survives edits)
+- **Chat-based editing**: describe what you want changed in natural language, or select text for targeted inline edits
+- **Auto-generating wiki links**: red links become new pages on click, enabling serendipitous exploration
 
 ### "Why not Notion AI / ChatGPT Canvas?"
 
@@ -38,13 +38,13 @@ Delve is self-hosted, local-first, and provider-agnostic:
 ## Features
 
 - **Streaming page generation** with real-time markdown rendering
-- **Inline comments** — select text to ask questions or request changes, anchored to the passage
-- **Chat-based editing** — refine pages through natural language instructions
-- **Version history** — full history with preview, revert, and branching
-- **Wiki links** — `[[Link]]` syntax with auto-generation of missing pages
-- **Projects** — organize pages into separate namespaces
-- **Multi-provider** — OpenRouter, OpenAI, or Anthropic (configure in Settings)
-- **Web search** — optional real-time information via OpenRouter or OpenAI
+- **Inline comments**: select text to ask questions or request changes, anchored to the passage
+- **Chat-based editing**: refine pages through natural language instructions
+- **Version history**: full history with preview, revert, and branching
+- **Wiki links**: `[[Link]]` syntax with auto-generation of missing pages
+- **Projects**: organize pages into separate namespaces
+- **Multi-provider**: OpenRouter, OpenAI, or Anthropic (configure in Settings)
+- **Web search**: optional real-time information for supported providers
 
 ## Setup
 
@@ -72,7 +72,7 @@ All settings are configurable through the web UI at `/_settings`:
 | Provider | OpenRouter, OpenAI, or Anthropic |
 | API Key | Your key for the selected provider |
 | Model | Model name (e.g. `anthropic/claude-sonnet-4`, `gpt-4.1`) |
-| Web Search | Enable real-time information (OpenRouter/OpenAI only) |
+| Web Search | Enable real-time information |
 | System Prompt | Custom instructions for all requests |
 
 ### Environment Variables (optional)
@@ -94,9 +94,10 @@ No database required. Back up by copying the `data/` directory.
 
 ## Tech Stack
 
-- [Hono](https://hono.dev) — Web framework
-- [streaming-markdown](https://github.com/nicoverbruggen/streaming-markdown) — Progressive rendering
-- [marked](https://marked.js.org) — Markdown to HTML
+- Vanilla JS frontend
+- [Hono](https://hono.dev) - Backend
+- [streaming-markdown](https://github.com/thetarnav/streaming-markdown) - Progressive rendering (CDN)
+- [marked](https://marked.js.org) - Markdown to HTML
 
 ## License
 
