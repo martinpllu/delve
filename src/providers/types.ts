@@ -25,6 +25,7 @@ export interface ProviderCapabilities {
 export interface ProviderConfig {
   apiKey: string;
   model?: string;
+  searchEnabled?: boolean;
 }
 
 export interface RequestContext {

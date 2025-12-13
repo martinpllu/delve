@@ -68,17 +68,25 @@ export class AnthropicProvider extends BaseProvider {
   get capabilities(): ProviderCapabilities {
     return {
       streaming: true,
-      webSearch: false, // Anthropic doesn't have built-in web search
+      webSearch: true,
     };
   }
 
   getDefaultModel(): string {
-    return 'claude-sonnet-4-20250514';
+    return 'claude-sonnet-4-5-20250929';
   }
 
   applyWebSearch(model: string, _enabled: boolean): string {
-    // Anthropic doesn't support web search, return model unchanged
+    // Anthropic uses tools parameter for web search, not model name
     return model;
+  }
+
+  private getWebSearchTools(): Array<{ type: string; name: string; max_uses?: number }> {
+    return [{
+      type: 'web_search_20250305',
+      name: 'web_search',
+      max_uses: 5,
+    }];
   }
 
   async invoke(
@@ -91,11 +99,26 @@ export class AnthropicProvider extends BaseProvider {
       throw new Error(validation.error);
     }
 
-    console.log('Invoking Anthropic API with model:', model, 'messages:', messages.length);
+    console.log('Invoking Anthropic API with model:', model, 'messages:', messages.length, 'search:', this.config.searchEnabled);
 
     // Extract system message if present
     const systemMessage = messages.find(m => m.role === 'system');
     const nonSystemMessages = messages.filter(m => m.role !== 'system');
+
+    const requestBody: Record<string, unknown> = {
+      model,
+      max_tokens: 8192,
+      system: systemMessage?.content,
+      messages: nonSystemMessages.map(m => ({
+        role: m.role,
+        content: m.content,
+      })),
+    };
+
+    // Add web search tools if enabled
+    if (this.config.searchEnabled) {
+      requestBody.tools = this.getWebSearchTools();
+    }
 
     const response = await fetch(ANTHROPIC_API_URL, {
       method: 'POST',
@@ -104,15 +127,7 @@ export class AnthropicProvider extends BaseProvider {
         'anthropic-version': '2023-06-01',
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        model,
-        max_tokens: 8192,
-        system: systemMessage?.content,
-        messages: nonSystemMessages.map(m => ({
-          role: m.role,
-          content: m.content,
-        })),
-      }),
+      body: JSON.stringify(requestBody),
     });
 
     if (!response.ok) {
@@ -155,11 +170,27 @@ export class AnthropicProvider extends BaseProvider {
       throw new Error(validation.error);
     }
 
-    console.log('Invoking Anthropic API (streaming) with model:', model, 'messages:', messages.length);
+    console.log('Invoking Anthropic API (streaming) with model:', model, 'messages:', messages.length, 'search:', this.config.searchEnabled);
 
     // Extract system message if present
     const systemMessage = messages.find(m => m.role === 'system');
     const nonSystemMessages = messages.filter(m => m.role !== 'system');
+
+    const requestBody: Record<string, unknown> = {
+      model,
+      max_tokens: 8192,
+      stream: true,
+      system: systemMessage?.content,
+      messages: nonSystemMessages.map(m => ({
+        role: m.role,
+        content: m.content,
+      })),
+    };
+
+    // Add web search tools if enabled
+    if (this.config.searchEnabled) {
+      requestBody.tools = this.getWebSearchTools();
+    }
 
     const response = await fetch(ANTHROPIC_API_URL, {
       method: 'POST',
@@ -168,16 +199,7 @@ export class AnthropicProvider extends BaseProvider {
         'anthropic-version': '2023-06-01',
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        model,
-        max_tokens: 8192,
-        stream: true,
-        system: systemMessage?.content,
-        messages: nonSystemMessages.map(m => ({
-          role: m.role,
-          content: m.content,
-        })),
-      }),
+      body: JSON.stringify(requestBody),
     });
 
     if (!response.ok) {

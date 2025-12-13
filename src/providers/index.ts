@@ -19,9 +19,9 @@ const providerClasses: Record<ProviderId, new (config: ProviderConfig) => BasePr
 
 // Provider metadata
 const providerInfo: Record<ProviderId, { name: string; defaultModel: string }> = {
-  openrouter: { name: 'OpenRouter', defaultModel: 'anthropic/claude-sonnet-4' },
-  openai: { name: 'OpenAI', defaultModel: 'gpt-4o' },
-  anthropic: { name: 'Anthropic', defaultModel: 'claude-sonnet-4-20250514' },
+  openrouter: { name: 'OpenRouter', defaultModel: 'anthropic/claude-sonnet-4.5' },
+  openai: { name: 'OpenAI', defaultModel: 'gpt-5.2' },
+  anthropic: { name: 'Anthropic', defaultModel: 'claude-sonnet-4-5-20250929' },
 };
 
 export interface UserSettingsForProvider {
@@ -46,6 +46,7 @@ export function createProvider(settings: UserSettingsForProvider): BaseProvider 
   return new ProviderClass({
     apiKey,
     model: settings.model,
+    searchEnabled: settings.searchEnabled,
   });
 }
 

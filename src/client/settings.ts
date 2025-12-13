@@ -1,21 +1,21 @@
 import { isMac, getElement } from './utils.js';
 
 const MODEL_HELP: Record<string, string> = {
-  openrouter: 'Find model names at <a href="https://openrouter.ai/models" target="_blank" rel="noopener">openrouter.ai/models</a>. Examples: <code>anthropic/claude-sonnet-4</code>, <code>openai/gpt-4o</code>',
-  openai: 'Examples: <code>gpt-4o</code>, <code>gpt-4o-mini</code>, <code>o1</code>',
-  anthropic: 'Examples: <code>claude-sonnet-4-20250514</code>, <code>claude-opus-4-20250514</code>',
+  openrouter: 'Find model names at <a href="https://openrouter.ai/models" target="_blank" rel="noopener">openrouter.ai/models</a>. Examples: <code>anthropic/claude-opus-4.5</code>, <code>openai/gpt-5.2</code>',
+  openai: 'Examples: <code>gpt-4.1</code>, <code>gpt-5</code>, <code>o4-mini</code>',
+  anthropic: 'Examples: <code>claude-opus-4-5-20251101</code>, <code>claude-sonnet-4-5-20250929</code>',
 };
 
 const SEARCH_HELP: Record<string, string> = {
   openrouter: 'When enabled, appends <code>:online</code> to the model ID for web search via OpenRouter.',
   openai: 'Uses OpenAI search-enabled models for real-time information.',
-  anthropic: 'Web search is not available for Anthropic models.',
+  anthropic: 'Uses Anthropic\'s web search tool for real-time information.',
 };
 
 const DEFAULT_MODELS: Record<string, string> = {
-  openrouter: 'anthropic/claude-sonnet-4',
-  openai: 'gpt-4o',
-  anthropic: 'claude-sonnet-4-20250514',
+  openrouter: 'anthropic/claude-sonnet-4.5',
+  openai: 'gpt-5.2',
+  anthropic: 'claude-sonnet-4-5-20250929',
 };
 
 export function initSettings(): void {
@@ -56,13 +56,6 @@ export function initSettings(): void {
 
     // Update search toggle
     if (searchToggle && searchCheckbox && searchDescription) {
-      if (provider === 'anthropic') {
-        searchToggle.style.opacity = '0.5';
-        searchCheckbox.disabled = true;
-      } else {
-        searchToggle.style.opacity = '1';
-        searchCheckbox.disabled = false;
-      }
       searchDescription.innerHTML = SEARCH_HELP[provider] || SEARCH_HELP.openrouter;
     }
   }
