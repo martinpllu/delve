@@ -8,7 +8,8 @@
     "skipLibCheck": true,
     "outDir": "dist",
     "rootDir": "src",
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "lib": ["ES2022", "DOM", "DOM.Iterable"]
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules"]

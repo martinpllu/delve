@@ -42,6 +42,21 @@ export function settingsPage(
             name="model"
             value="${escapeHtml(settings.model || config.model)}"
           />
+
+          <div class="settings-toggle">
+            <label class="toggle-label">
+              <input
+                type="checkbox"
+                id="search-enabled"
+                name="searchEnabled"
+                ${settings.searchEnabled ? 'checked' : ''}
+              />
+              <span class="toggle-text">Enable web search</span>
+            </label>
+            <p class="settings-description">
+              When enabled, appends <code>:online</code> to the model ID to give it web search capabilities via OpenRouter.
+            </p>
+          </div>
         </div>
 
         <div class="settings-section">
@@ -65,56 +80,6 @@ export function settingsPage(
         </div>
       </form>
     </section>
-
-    <script>
-      (function() {
-        const form = document.getElementById('settings-form');
-        const saveBtn = document.getElementById('save-btn');
-        const saveStatus = document.getElementById('save-status');
-        const textarea = document.getElementById('system-prompt');
-
-        // Cmd/Ctrl+Enter to submit
-        const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
-        textarea.addEventListener('keydown', (e) => {
-          const modKey = isMac ? e.metaKey : e.ctrlKey;
-          if (modKey && e.key === 'Enter') {
-            e.preventDefault();
-            form.requestSubmit();
-          }
-        });
-
-        form.addEventListener('submit', async (e) => {
-          e.preventDefault();
-
-          saveBtn.disabled = true;
-          saveBtn.innerHTML = '<span class="spinner"></span> Saving...';
-          saveStatus.textContent = '';
-
-          try {
-            const formData = new FormData(form);
-            const response = await fetch('/settings', {
-              method: 'POST',
-              body: formData,
-            });
-
-            const result = await response.json();
-            if (result.success) {
-              saveStatus.textContent = 'Saved!';
-              saveStatus.className = 'save-status success';
-            } else {
-              saveStatus.textContent = 'Error: ' + (result.error || 'Failed to save');
-              saveStatus.className = 'save-status error';
-            }
-          } catch (error) {
-            saveStatus.textContent = 'Error: ' + error.message;
-            saveStatus.className = 'save-status error';
-          } finally {
-            saveBtn.disabled = false;
-            saveBtn.textContent = 'Save Settings';
-          }
-        });
-      })();
-    </script>
   `,
   });
 }
