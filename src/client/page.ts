@@ -231,9 +231,10 @@ export function initPage(): void {
   let currentRange: Range | null = null;
 
   function getSelectionContext(range: Range, charsBefore = 30, charsAfter = 30): SelectionContext {
-    const text = range.toString();
+    // Normalize line endings to \n (browsers may return \r\n on some platforms)
+    const text = range.toString().replace(/\r\n/g, '\n');
     const container = range.commonAncestorContainer;
-    const fullText = container.textContent || '';
+    const fullText = (container.textContent || '').replace(/\r\n/g, '\n');
     const startOffset = range.startOffset;
     const endOffset = range.endOffset;
 
@@ -520,8 +521,12 @@ export function initPage(): void {
 
   // Inline Comment Highlights - Click to View
   wikiContent.addEventListener('click', (e) => {
-    const highlight = (e.target as HTMLElement).closest<HTMLElement>('.inline-comment');
+    const target = e.target as HTMLElement;
+    const highlight = target.closest<HTMLElement>('.inline-comment');
     if (!highlight) return;
+
+    // If clicking on a link inside the highlight, let the link work
+    if (target.closest('a')) return;
 
     const commentId = highlight.dataset.commentId;
     const comment = inlineComments.find(c => c.id === commentId);

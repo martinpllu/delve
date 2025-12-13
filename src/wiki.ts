@@ -888,83 +888,43 @@ export function findAnchorPosition(content: string, anchor: TextAnchor): AnchorM
 }
 
 /**
- * Find anchor position only within text content (not inside HTML tags)
+ * Find anchor position only within text content (not inside HTML tags).
+ * Can match text that spans across HTML tags.
  */
 function findAnchorInTextContent(
   html: string,
   anchor: TextAnchor
 ): AnchorMatch | null {
-  // Build a map of "safe" positions (positions that are in text content, not inside tags)
-  // We'll search for the anchor only in these safe regions
+  // Normalize line endings in anchor (browsers may have stored \r\n)
+  const searchText = anchor.text.replace(/\r\n/g, '\n');
 
-  const textRegions: { start: number; end: number; text: string }[] = [];
+  // Build concatenated text content and a map from text position to HTML position
+  let textContent = '';
+  const textPosToHtmlPos: number[] = []; // textPosToHtmlPos[i] = HTML position of text char i
   let inTag = false;
-  let regionStart = 0;
 
   for (let i = 0; i < html.length; i++) {
     if (html[i] === '<') {
-      if (!inTag && i > regionStart) {
-        textRegions.push({
-          start: regionStart,
-          end: i,
-          text: html.slice(regionStart, i)
-        });
-      }
       inTag = true;
     } else if (html[i] === '>') {
       inTag = false;
-      regionStart = i + 1;
+    } else if (!inTag) {
+      textPosToHtmlPos.push(i);
+      textContent += html[i];
     }
   }
 
-  // Don't forget the last region after the final tag
-  if (!inTag && regionStart < html.length) {
-    textRegions.push({
-      start: regionStart,
-      end: html.length,
-      text: html.slice(regionStart)
-    });
+  // Search for the anchor text in the concatenated text content
+  const idx = textContent.indexOf(searchText);
+  if (idx === -1) {
+    return null;
   }
 
-  // Now search for the anchor text only within text regions
-  // First try exact match
-  for (const region of textRegions) {
-    const idx = region.text.indexOf(anchor.text);
-    if (idx !== -1) {
-      return {
-        start: region.start + idx,
-        end: region.start + idx + anchor.text.length
-      };
-    }
-  }
+  // Map back to HTML positions
+  const startHtmlPos = textPosToHtmlPos[idx];
+  const endHtmlPos = textPosToHtmlPos[idx + searchText.length - 1] + 1;
 
-  // Try with prefix context
-  if (anchor.prefix) {
-    for (const region of textRegions) {
-      const pattern = anchor.prefix + anchor.text;
-      const idx = region.text.indexOf(pattern);
-      if (idx !== -1) {
-        const start = region.start + idx + anchor.prefix.length;
-        return { start, end: start + anchor.text.length };
-      }
-    }
-  }
-
-  // Try with suffix context
-  if (anchor.suffix) {
-    for (const region of textRegions) {
-      const pattern = anchor.text + anchor.suffix;
-      const idx = region.text.indexOf(pattern);
-      if (idx !== -1) {
-        return {
-          start: region.start + idx,
-          end: region.start + idx + anchor.text.length
-        };
-      }
-    }
-  }
-
-  return null;
+  return { start: startHtmlPos, end: endHtmlPos };
 }
 
 /**
