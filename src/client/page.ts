@@ -44,6 +44,20 @@ export function initPage(): void {
   const btnApplyEdit = getElement<HTMLButtonElement>('btn-apply-edit');
 
   if (unifiedTextarea && btnAsk && btnApplyEdit) {
+    // Show reminder when textarea is empty
+    function showEmptyReminder(): void {
+      unifiedTextarea.focus();
+      unifiedTextarea.classList.add('shake');
+      unifiedTextarea.placeholder = 'Please enter a question or edit instruction...';
+      setTimeout(() => {
+        unifiedTextarea.classList.remove('shake');
+      }, 500);
+      // Reset placeholder after a moment
+      setTimeout(() => {
+        unifiedTextarea.placeholder = 'Ask a question or describe an edit...';
+      }, 3000);
+    }
+
     // Keyboard shortcuts: Cmd+Enter = Ask, Cmd+Shift+Enter = Apply Edit
     unifiedTextarea.addEventListener('keydown', (e) => {
       const modKey = isMac ? e.metaKey : e.ctrlKey;
@@ -60,7 +74,10 @@ export function initPage(): void {
     // Ask button - creates comment thread
     btnAsk.addEventListener('click', async () => {
       const message = unifiedTextarea.value.trim();
-      if (!message) return;
+      if (!message) {
+        showEmptyReminder();
+        return;
+      }
 
       unifiedTextarea.disabled = true;
       btnAsk.disabled = true;
@@ -98,12 +115,15 @@ export function initPage(): void {
     // Apply Edit button - modifies page content
     btnApplyEdit.addEventListener('click', async () => {
       const message = unifiedTextarea.value.trim();
-      if (!message) return;
+      if (!message) {
+        showEmptyReminder();
+        return;
+      }
 
       unifiedTextarea.disabled = true;
       btnAsk.disabled = true;
       btnApplyEdit.disabled = true;
-      btnApplyEdit.innerHTML = '<span class="spinner"></span> Updating...';
+      btnApplyEdit.innerHTML = '<span class="spinner"></span> Editing...';
 
       try {
         const formData = new FormData();
@@ -128,7 +148,7 @@ export function initPage(): void {
         unifiedTextarea.disabled = false;
         btnAsk.disabled = false;
         btnApplyEdit.disabled = false;
-        btnApplyEdit.textContent = 'Apply Edit';
+        btnApplyEdit.textContent = 'Edit';
       }
     });
   }
@@ -299,11 +319,11 @@ export function initPage(): void {
     popoverSelection.textContent = '"' + preview + '"';
 
     popoverBody.innerHTML = `
-      <textarea id="popover-textarea" placeholder="Ask about this or describe a change..." rows="3"></textarea>
+      <textarea id="popover-textarea" placeholder="Ask a question or describe an edit..." rows="3"></textarea>
       <div class="popover-buttons">
         <button class="btn-cancel" id="popover-cancel">Cancel</button>
         <button class="btn-submit" id="popover-ask">Ask</button>
-        <button class="btn-submit btn-apply" id="popover-edit">Apply Edit</button>
+        <button class="btn-submit btn-apply" id="popover-edit">Edit</button>
       </div>
     `;
 
@@ -376,7 +396,15 @@ export function initPage(): void {
     if (target.id === 'popover-ask') {
       const textarea = getElement<HTMLTextAreaElement>('popover-textarea');
       const message = textarea?.value.trim();
-      if (!message || !currentSelection) return;
+      if (!message) {
+        if (textarea) {
+          textarea.focus();
+          textarea.classList.add('shake');
+          setTimeout(() => textarea.classList.remove('shake'), 500);
+        }
+        return;
+      }
+      if (!currentSelection) return;
 
       (target as HTMLButtonElement).disabled = true;
       const editBtn = getElement<HTMLButtonElement>('popover-edit');
@@ -448,7 +476,15 @@ export function initPage(): void {
     if (target.id === 'popover-edit') {
       const textarea = getElement<HTMLTextAreaElement>('popover-textarea');
       const message = textarea?.value.trim();
-      if (!message || !currentSelection) return;
+      if (!message) {
+        if (textarea) {
+          textarea.focus();
+          textarea.classList.add('shake');
+          setTimeout(() => textarea.classList.remove('shake'), 500);
+        }
+        return;
+      }
+      if (!currentSelection) return;
 
       (target as HTMLButtonElement).disabled = true;
       const askBtn = getElement<HTMLButtonElement>('popover-ask');
@@ -845,6 +881,222 @@ export function initPage(): void {
         alert('Error: ' + (error as Error).message);
         deleteBtn.disabled = false;
         deleteBtn.textContent = 'Delete Page';
+      }
+    });
+  }
+
+  // ============================================
+  // Markdown Editor
+  // ============================================
+  const btnEditMarkdown = getElement<HTMLButtonElement>('btn-edit-markdown');
+  const markdownEditor = getElement<HTMLElement>('markdown-editor');
+  const markdownTextarea = getElement<HTMLTextAreaElement>('markdown-textarea');
+  const editorStats = getElement<HTMLElement>('editor-stats');
+  const btnCancelEdit = getElement<HTMLButtonElement>('btn-cancel-edit');
+  const btnSaveEdit = getElement<HTMLButtonElement>('btn-save-edit');
+
+  if (btnEditMarkdown && markdownEditor && markdownTextarea && wikiContent && btnCancelEdit && btnSaveEdit) {
+    let originalMarkdown = '';
+    let isEditMode = false;
+
+    function updateStats(): void {
+      if (!editorStats || !markdownTextarea) return;
+      const text = markdownTextarea.value;
+      const lines = text.split('\n').length;
+      const chars = text.length;
+      editorStats.textContent = `${lines} line${lines !== 1 ? 's' : ''} · ${chars.toLocaleString()} char${chars !== 1 ? 's' : ''}`;
+    }
+
+    function hasUnsavedChanges(): boolean {
+      return markdownTextarea!.value !== originalMarkdown;
+    }
+
+    async function enterEditMode(): Promise<void> {
+      if (isEditMode) return;
+
+      // Fetch raw markdown
+      btnEditMarkdown!.disabled = true;
+      btnEditMarkdown!.innerHTML = '<span class="spinner"></span>';
+
+      try {
+        const response = await fetch('/' + project + '/' + slug + '/raw');
+        const data = await response.json();
+
+        if (data.error) {
+          alert('Error: ' + data.error);
+          return;
+        }
+
+        originalMarkdown = data.markdown;
+        markdownTextarea!.value = originalMarkdown;
+        updateStats();
+
+        // Switch to edit mode - hide content and chat section, show editor
+        isEditMode = true;
+        wikiContent!.classList.add('hidden');
+        markdownEditor!.classList.remove('hidden');
+
+        // Hide the chat section while editing
+        const chatSection = document.querySelector('.chat-section');
+        if (chatSection) chatSection.classList.add('hidden');
+
+        // Push state so back button exits edit mode
+        history.pushState({ editMode: true }, '', window.location.href);
+
+        // Focus and scroll to top of textarea
+        markdownTextarea!.focus();
+        markdownTextarea!.scrollTop = 0;
+
+        // Auto-resize textarea to fit content
+        autoResizeTextarea();
+      } catch (error) {
+        alert('Error loading page content: ' + (error as Error).message);
+      } finally {
+        btnEditMarkdown!.disabled = false;
+        btnEditMarkdown!.textContent = 'Edit Source';
+      }
+    }
+
+    function exitEditMode(reload: boolean = false): void {
+      if (!isEditMode) return;
+
+      isEditMode = false;
+      markdownEditor!.classList.add('hidden');
+      wikiContent!.classList.remove('hidden');
+
+      // Show the chat section again
+      const chatSection = document.querySelector('.chat-section');
+      if (chatSection) chatSection.classList.remove('hidden');
+
+      if (reload) {
+        window.location.reload();
+      }
+    }
+
+    function autoResizeTextarea(): void {
+      if (!markdownTextarea) return;
+      // Set minimum height then adjust to scroll height
+      markdownTextarea.style.height = '400px';
+      markdownTextarea.style.height = Math.max(400, markdownTextarea.scrollHeight) + 'px';
+    }
+
+    async function saveChanges(): Promise<void> {
+      if (!hasUnsavedChanges()) {
+        exitEditMode();
+        return;
+      }
+
+      // Show loading state
+      const btnText = btnSaveEdit!.querySelector('.btn-text');
+      const btnLoading = btnSaveEdit!.querySelector('.btn-loading');
+      btnText?.classList.add('hidden');
+      btnLoading?.classList.remove('hidden');
+      btnSaveEdit!.disabled = true;
+      btnCancelEdit!.disabled = true;
+      markdownTextarea!.disabled = true;
+
+      try {
+        const formData = new FormData();
+        formData.append('markdown', markdownTextarea!.value);
+
+        const response = await fetch('/' + project + '/' + slug + '/raw', {
+          method: 'POST',
+          body: formData,
+        });
+
+        const result = await response.json();
+        if (result.success) {
+          exitEditMode(true);
+        } else {
+          alert('Error saving: ' + (result.error || 'Unknown error'));
+        }
+      } catch (error) {
+        alert('Error saving: ' + (error as Error).message);
+      } finally {
+        btnText?.classList.remove('hidden');
+        btnLoading?.classList.add('hidden');
+        btnSaveEdit!.disabled = false;
+        btnCancelEdit!.disabled = false;
+        markdownTextarea!.disabled = false;
+      }
+    }
+
+    // Event listeners
+    btnEditMarkdown.addEventListener('click', enterEditMode);
+
+    btnCancelEdit.addEventListener('click', () => {
+      if (hasUnsavedChanges()) {
+        if (!confirm('You have unsaved changes. Are you sure you want to discard them?')) {
+          return;
+        }
+      }
+      exitEditMode();
+    });
+
+    btnSaveEdit.addEventListener('click', saveChanges);
+
+    markdownTextarea.addEventListener('input', () => {
+      updateStats();
+      autoResizeTextarea();
+    });
+
+    // Keyboard shortcuts
+    markdownTextarea.addEventListener('keydown', (e) => {
+      const modKey = isMac ? e.metaKey : e.ctrlKey;
+
+      // Cmd/Ctrl+S to save
+      if (modKey && e.key === 's') {
+        e.preventDefault();
+        saveChanges();
+      }
+
+      // Escape to cancel
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        if (hasUnsavedChanges()) {
+          if (confirm('You have unsaved changes. Are you sure you want to discard them?')) {
+            exitEditMode();
+          }
+        } else {
+          exitEditMode();
+        }
+      }
+
+      // Tab to insert spaces (instead of moving focus)
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        const start = markdownTextarea.selectionStart;
+        const end = markdownTextarea.selectionEnd;
+        const value = markdownTextarea.value;
+
+        // Insert 2 spaces
+        markdownTextarea.value = value.substring(0, start) + '  ' + value.substring(end);
+        markdownTextarea.selectionStart = markdownTextarea.selectionEnd = start + 2;
+        updateStats();
+      }
+    });
+
+    // Warn before leaving with unsaved changes
+    window.addEventListener('beforeunload', (e) => {
+      if (isEditMode && hasUnsavedChanges()) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    });
+
+    // Handle back button to exit edit mode
+    window.addEventListener('popstate', (e) => {
+      if (isEditMode) {
+        if (hasUnsavedChanges()) {
+          // Re-push state and confirm with user
+          history.pushState({ editMode: true }, '', window.location.href);
+          if (confirm('You have unsaved changes. Are you sure you want to discard them?')) {
+            history.back();
+            exitEditMode();
+          }
+        } else {
+          exitEditMode();
+        }
       }
     });
   }

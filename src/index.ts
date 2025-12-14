@@ -722,6 +722,48 @@ app.post('/:project/:slug/revert', async (c) => {
   return c.json({ success: true, currentVersion: targetVersion });
 });
 
+// Get raw markdown content for editing
+app.get('/:project/:slug/raw', async (c) => {
+  const project = c.req.param('project');
+  const slug = c.req.param('slug');
+
+  const content = await readPage(slug, project);
+  if (content === null) {
+    return c.json({ error: 'Page not found' }, 404);
+  }
+
+  return c.json({ markdown: content });
+});
+
+// Save raw markdown content (direct edit)
+app.post('/:project/:slug/raw', async (c) => {
+  const project = c.req.param('project');
+  const slug = c.req.param('slug');
+
+  try {
+    const body = await c.req.parseBody();
+    const markdown = body['markdown'];
+
+    if (typeof markdown !== 'string') {
+      return c.json({ error: 'Invalid markdown content' }, 400);
+    }
+
+    const exists = await pageExists(slug, project);
+    if (!exists) {
+      return c.json({ error: 'Page not found' }, 404);
+    }
+
+    await writePage(slug, markdown, project);
+    await addVersion(slug, markdown, 'Manual edit', 'edit', project);
+
+    return c.json({ success: true });
+  } catch (error) {
+    console.error('Save raw error:', error);
+    const msg = error instanceof Error ? error.message : 'Unknown error';
+    return c.json({ error: msg }, 500);
+  }
+});
+
 // Delete a page
 app.post('/:project/:slug/delete', async (c) => {
   const project = c.req.param('project');

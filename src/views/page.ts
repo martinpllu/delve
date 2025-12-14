@@ -131,6 +131,26 @@ export function wikiPage(
       <div class="wiki-content" id="wiki-content">
         ${contentWithHighlights}
       </div>
+      <div class="markdown-editor hidden" id="markdown-editor">
+        <div class="editor-toolbar">
+          <div class="editor-info">
+            <span class="editor-label">Editing Markdown</span>
+            <span class="editor-stats" id="editor-stats"></span>
+          </div>
+          <div class="editor-actions">
+            <kbd class="editor-shortcut">${process.platform === 'darwin' ? '⌘' : 'Ctrl'}+S save</kbd>
+            <kbd class="editor-shortcut">Esc cancel</kbd>
+          </div>
+        </div>
+        <textarea id="markdown-textarea" spellcheck="false"></textarea>
+        <div class="editor-footer">
+          <button class="btn-cancel-edit" id="btn-cancel-edit">Cancel</button>
+          <button class="btn-save-edit" id="btn-save-edit">
+            <span class="btn-text">Save Changes</span>
+            <span class="btn-loading hidden"><span class="spinner"></span> Saving...</span>
+          </button>
+        </div>
+      </div>
     </article>
 
     <!-- Selection Toolbar (hidden by default) -->
@@ -161,7 +181,14 @@ export function wikiPage(
         ></textarea>
         <div class="unified-buttons">
           <button type="button" id="btn-ask">Ask</button>
-          <button type="button" id="btn-apply-edit">Apply Edit</button>
+          <button type="button" id="btn-apply-edit">Edit</button>
+          <button type="button" class="btn-edit-source" id="btn-edit-markdown">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="16 18 22 12 16 6"></polyline>
+              <polyline points="8 6 2 12 8 18"></polyline>
+            </svg>
+            Edit Source
+          </button>
         </div>
       </form>
 

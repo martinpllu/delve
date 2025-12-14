@@ -1269,6 +1269,20 @@ body[data-sidebar-open="false"] main {
   box-shadow: 0 0 0 3px var(--color-accent-subtle);
 }
 
+.unified-form textarea.shake {
+  animation: shake 0.4s ease-in-out;
+  border-color: var(--color-error);
+  box-shadow: 0 0 0 3px var(--color-error-subtle);
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+}
+
 .unified-buttons {
   display: flex;
   gap: 0.5rem;
@@ -1286,25 +1300,25 @@ body[data-sidebar-open="false"] main {
 }
 
 .unified-buttons #btn-ask {
-  background: var(--color-accent);
-  color: var(--color-text-inverse);
-  border: none;
+  background: var(--color-accent-subtle);
+  border: 1px solid var(--color-accent);
+  color: var(--color-accent);
 }
 
 .unified-buttons #btn-ask:hover {
-  background: var(--color-accent-hover);
+  background: var(--color-accent);
+  color: var(--color-text-inverse);
 }
 
 .unified-buttons #btn-apply-edit {
-  background: transparent;
-  border: 1px solid var(--color-border);
-  color: var(--color-text-secondary);
+  background: var(--color-accent-subtle);
+  border: 1px solid var(--color-accent);
+  color: var(--color-accent);
 }
 
 .unified-buttons #btn-apply-edit:hover {
-  background: var(--color-bg-hover);
-  color: var(--color-text);
-  border-color: var(--color-text-tertiary);
+  background: var(--color-accent);
+  color: var(--color-text-inverse);
 }
 
 .unified-buttons button:disabled {
@@ -1688,6 +1702,12 @@ body[data-sidebar-open="false"] main {
   box-shadow: 0 0 0 2px var(--color-accent-subtle);
 }
 
+.popover-body textarea.shake {
+  animation: shake 0.4s ease-in-out;
+  border-color: var(--color-error);
+  box-shadow: 0 0 0 2px var(--color-error-subtle);
+}
+
 .popover-buttons {
   display: flex;
   gap: 0.5rem;
@@ -1720,25 +1740,26 @@ body[data-sidebar-open="false"] main {
 
 .btn-submit,
 .btn-submit-inline {
-  background: var(--color-accent);
-  color: var(--color-text-inverse);
+  background: var(--color-accent-subtle);
+  border: 1px solid var(--color-accent);
+  color: var(--color-accent);
 }
 
 .btn-submit:hover,
 .btn-submit-inline:hover {
-  background: var(--color-accent-hover);
+  background: var(--color-accent);
+  color: var(--color-text-inverse);
 }
 
 .btn-submit.btn-apply {
-  background: transparent;
-  border: 1px solid var(--color-border);
-  color: var(--color-text-secondary);
+  background: var(--color-accent-subtle);
+  border: 1px solid var(--color-accent);
+  color: var(--color-accent);
 }
 
 .btn-submit.btn-apply:hover {
-  background: var(--color-bg-hover);
-  color: var(--color-text);
-  border-color: var(--color-text-tertiary);
+  background: var(--color-accent);
+  color: var(--color-text-inverse);
 }
 
 .btn-resolve-inline {
@@ -2330,6 +2351,300 @@ body[data-sidebar-open="false"] main {
 .settings-toggle .settings-description {
   margin-top: 0.5rem;
   margin-left: 1.75rem;
+}
+
+/* ===== MARKDOWN EDITOR ===== */
+
+/* Edit Source Button in Unified Form */
+.btn-edit-source {
+  margin-left: auto;
+  padding: 0.625rem 1.25rem;
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-md);
+  font-size: 0.875rem;
+  font-family: var(--font-body);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-edit-source svg {
+  opacity: 0.7;
+  transition: opacity var(--transition-fast);
+}
+
+.btn-edit-source:hover svg {
+  opacity: 1;
+}
+
+.btn-edit-source:hover {
+  background: var(--color-bg-hover);
+  color: var(--color-text);
+  border-color: var(--color-text-tertiary);
+}
+
+.btn-edit-source:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-edit-source .spinner {
+  width: 14px;
+  height: 14px;
+}
+
+/* Markdown Editor Container */
+.markdown-editor {
+  animation: editorSlideIn 0.25s ease-out;
+}
+
+@keyframes editorSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Editor Toolbar */
+.editor-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: linear-gradient(to bottom, var(--color-bg-sidebar), var(--color-bg));
+  border: 1px solid var(--color-border);
+  border-bottom: none;
+  border-radius: var(--border-radius-md) var(--border-radius-md) 0 0;
+}
+
+.editor-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.editor-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-text);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.editor-stats {
+  font-size: 0.75rem;
+  font-family: var(--font-mono);
+  color: var(--color-text-tertiary);
+  padding: 4px 10px;
+  background: var(--color-bg);
+  border-radius: var(--border-radius-sm);
+  border: 1px solid var(--color-border-subtle);
+}
+
+.editor-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.editor-shortcut {
+  font-size: 0.65rem;
+  font-family: var(--font-mono);
+  color: var(--color-text-tertiary);
+  padding: 4px 8px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+/* Editor Textarea */
+.markdown-editor textarea {
+  width: 100%;
+  min-height: 400px;
+  padding: 24px;
+  border: 1px solid var(--color-border);
+  border-top: none;
+  border-bottom: none;
+  font-family: 'JetBrains Mono', 'SF Mono', 'Monaco', 'Fira Code', monospace;
+  font-size: 0.9rem;
+  line-height: 1.75;
+  color: var(--color-text);
+  background: var(--color-bg-elevated);
+  resize: none;
+  outline: none;
+  transition: background var(--transition-fast), box-shadow var(--transition-fast);
+  /* Subtle inner shadow for depth */
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.02);
+}
+
+.markdown-editor textarea::placeholder {
+  color: var(--color-text-tertiary);
+}
+
+.markdown-editor textarea:focus {
+  background: #ffffff;
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.02), 0 0 0 2px var(--color-accent-subtle);
+}
+
+.markdown-editor textarea:disabled {
+  background: var(--color-bg);
+  color: var(--color-text-tertiary);
+  cursor: not-allowed;
+}
+
+/* Custom scrollbar for editor */
+.markdown-editor textarea::-webkit-scrollbar {
+  width: 8px;
+}
+
+.markdown-editor textarea::-webkit-scrollbar-track {
+  background: var(--color-bg);
+}
+
+.markdown-editor textarea::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 4px;
+}
+
+.markdown-editor textarea::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-tertiary);
+}
+
+/* Editor Footer */
+.editor-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px;
+  background: linear-gradient(to top, var(--color-bg-sidebar), var(--color-bg));
+  border: 1px solid var(--color-border);
+  border-top: none;
+  border-radius: 0 0 var(--border-radius-md) var(--border-radius-md);
+}
+
+.btn-cancel-edit {
+  padding: 10px 20px;
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-md);
+  font-size: 0.875rem;
+  font-family: var(--font-body);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-cancel-edit:hover {
+  background: var(--color-bg-hover);
+  color: var(--color-text);
+  border-color: var(--color-text-tertiary);
+}
+
+.btn-cancel-edit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-save-edit {
+  padding: 10px 24px;
+  background: var(--color-accent);
+  border: none;
+  border-radius: var(--border-radius-md);
+  font-size: 0.875rem;
+  font-family: var(--font-body);
+  font-weight: 600;
+  color: var(--color-text-inverse);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-save-edit::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 50%);
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.btn-save-edit:hover {
+  background: var(--color-accent-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px var(--color-accent-glow);
+}
+
+.btn-save-edit:hover::before {
+  opacity: 1;
+}
+
+.btn-save-edit:active {
+  transform: translateY(0);
+}
+
+.btn-save-edit:disabled {
+  background: var(--color-accent);
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.btn-save-edit .btn-text,
+.btn-save-edit .btn-loading {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-save-edit .spinner {
+  width: 14px;
+  height: 14px;
+  border-width: 2px;
+  border-top-color: var(--color-text-inverse);
+}
+
+/* Editor Responsive */
+@media (max-width: 768px) {
+  .wiki-header {
+    opacity: 1;
+  }
+
+  .editor-toolbar {
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-start;
+  }
+
+  .editor-actions {
+    display: none;
+  }
+
+  .markdown-editor textarea {
+    padding: 16px;
+    font-size: 0.85rem;
+  }
+
+  .editor-footer {
+    padding: 12px;
+  }
+
+  .btn-cancel-edit,
+  .btn-save-edit {
+    padding: 10px 16px;
+    font-size: 0.8rem;
+  }
 }
 
 /* ===== UTILITY ===== */
