@@ -1,10 +1,28 @@
 # Delve
 
-**A private, local-first AI wiki for building knowledge bases through conversation.**
+**A private, local-first wiki for AI-assisted learning**
 
-Describe what you want to know. Watch it stream into existence. Refine it through inline comments and natural language edits. Click a link to generate the next page.
+Describe what you want to learn about. Watch the page stream in real-time. Ask questions and request edits. Click a link to generate the next page. Everything is stored as local markdown files.
 
 https://github.com/user-attachments/assets/7e2a4393-3c35-41e9-9a9c-b61f1a372f50
+
+## Quick Start
+
+You'll need an API key from [OpenRouter](https://openrouter.ai), [Anthropic](https://console.anthropic.com), or [OpenAI](https://platform.openai.com).
+
+1. Clone and install:
+   ```bash
+   git clone https://github.com/martinpllu/delve.git
+   cd delve
+   npm install
+   ```
+
+2. Start the server:
+   ```bash
+   npm run dev
+   ```
+
+3. Open http://localhost:3171 and configure your API key in Settings
 
 ## Why Delve?
 
@@ -46,38 +64,11 @@ Delve is self-hosted, local-first, and provider-agnostic:
 - **Multi-provider**: OpenRouter, OpenAI, or Anthropic (configure in Settings)
 - **Web search**: optional real-time information for supported providers
 
-## Setup
-
-1. Clone and install:
-   ```bash
-   git clone https://github.com/martinpllu/delve.git
-   cd delve
-   npm install
-   ```
-
-2. Start the server:
-   ```bash
-   npm run dev
-   ```
-
-3. Open http://localhost:3171 and configure your API key in Settings
-
-
 ## Configuration
 
-All settings are configurable through the web UI at `/_settings`:
+Configure your API provider, model, and other settings through the web UI at `http://localhost:3171/_settings`.
 
-| Setting | Description |
-|---------|-------------|
-| Provider | OpenRouter, OpenAI, or Anthropic |
-| API Key | Your key for the selected provider |
-| Model | Model name (e.g. `anthropic/claude-sonnet-4`, `gpt-4.1`) |
-| Web Search | Enable real-time information |
-| System Prompt | Custom instructions for all requests |
-
-### Environment Variables (optional)
-
-For deployment or automated setups:
+Environment variables can be set via a `.env` file in the project root or passed directly:
 
 | Variable | Default | Description |
 |----------|---------|-------------|
