@@ -1,4 +1,4 @@
-import type { SmdModule } from './types.js';
+import * as smd from 'streaming-markdown';
 import { getElement } from './utils.js';
 
 export async function initGeneratePage(): Promise<void> {
@@ -12,10 +12,6 @@ export async function initGeneratePage(): Promise<void> {
   const project = streamingSection.dataset.project;
 
   if (!streamingContent || !topic) return;
-
-  // Import streaming-markdown from CDN
-  // @ts-ignore - External CDN module
-  const smd: SmdModule = await import('https://cdn.jsdelivr.net/npm/streaming-markdown/smd.min.js');
 
   // Set up streaming markdown renderer
   const renderer = smd.default_renderer(streamingContent);

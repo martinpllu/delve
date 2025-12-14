@@ -1,4 +1,4 @@
-import type { SmdModule } from './types.js';
+import * as smd from 'streaming-markdown';
 import { isMac, getElement } from './utils.js';
 
 export function initHome(): void {
@@ -35,10 +35,6 @@ export function initHome(): void {
     streamingSection.style.display = 'block';
     streamingContent.innerHTML = '';
     if (streamingTitle) streamingTitle.textContent = '';
-
-    // Import streaming-markdown from CDN
-    // @ts-ignore - External CDN module
-    const smd: SmdModule = await import('https://cdn.jsdelivr.net/npm/streaming-markdown/smd.min.js');
 
     // Set up streaming markdown renderer
     const renderer = smd.default_renderer(streamingContent);

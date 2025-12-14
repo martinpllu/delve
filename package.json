@@ -12,7 +12,8 @@
   "dependencies": {
     "@hono/node-server": "^1.13.7",
     "hono": "^4.6.12",
-    "marked": "^15.0.4"
+    "marked": "^15.0.4",
+    "streaming-markdown": "^0.2.15"
   },
   "devDependencies": {
     "@playwright/test": "^1.57.0",

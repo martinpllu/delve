@@ -69,7 +69,7 @@ Each project is a subdirectory under `data/`. Each page within a project has:
 
 - `hono` + `@hono/node-server` - Web framework
 - `marked` - Markdown to HTML
-- `streaming-markdown` (CDN) - Progressive rendering during generation
+- `streaming-markdown` - Progressive rendering during generation
 
 ## Data Storage
 

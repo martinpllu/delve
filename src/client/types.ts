@@ -1,19 +1,3 @@
-// Streaming markdown library types (external CDN)
-export interface SmdRenderer {
-  // Internal renderer interface
-}
-
-export interface SmdParser {
-  // Internal parser interface
-}
-
-export interface SmdModule {
-  default_renderer(element: HTMLElement): SmdRenderer;
-  parser(renderer: SmdRenderer): SmdParser;
-  parser_write(parser: SmdParser, content: string): void;
-  parser_end(parser: SmdParser): void;
-}
-
 // Page data from server
 export interface PageInfo {
   slug: string;

@@ -87,7 +87,7 @@ No database required. Back up by copying the `data/` directory.
 
 - Vanilla JS frontend
 - [Hono](https://hono.dev) - Backend
-- [streaming-markdown](https://github.com/thetarnav/streaming-markdown) - Progressive rendering (CDN)
+- [streaming-markdown](https://github.com/thetarnav/streaming-markdown) - Progressive rendering
 - [marked](https://marked.js.org) - Markdown to HTML
 
 ## License
