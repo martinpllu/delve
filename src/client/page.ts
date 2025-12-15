@@ -44,17 +44,19 @@ export function initPage(): void {
   const btnApplyEdit = getElement<HTMLButtonElement>('btn-apply-edit');
 
   if (unifiedTextarea && btnAsk && btnApplyEdit) {
+    const textarea = unifiedTextarea; // Capture for use in nested functions
+
     // Show reminder when textarea is empty
     function showEmptyReminder(): void {
-      unifiedTextarea.focus();
-      unifiedTextarea.classList.add('shake');
-      unifiedTextarea.placeholder = 'Please enter a question or edit instruction...';
+      textarea.focus();
+      textarea.classList.add('shake');
+      textarea.placeholder = 'Please enter a question or edit instruction...';
       setTimeout(() => {
-        unifiedTextarea.classList.remove('shake');
+        textarea.classList.remove('shake');
       }, 500);
       // Reset placeholder after a moment
       setTimeout(() => {
-        unifiedTextarea.placeholder = 'Ask a question or describe an edit...';
+        textarea.placeholder = 'Ask a question or describe an edit...';
       }, 3000);
     }
 
