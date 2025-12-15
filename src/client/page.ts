@@ -968,6 +968,9 @@ export function initPage(): void {
       const chatSection = document.querySelector('.chat-section');
       if (chatSection) chatSection.classList.remove('hidden');
 
+      // Scroll to top of page
+      window.scrollTo(0, 0);
+
       if (reload) {
         window.location.reload();
       }
